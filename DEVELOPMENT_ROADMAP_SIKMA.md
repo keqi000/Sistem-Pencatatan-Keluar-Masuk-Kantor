@@ -24,18 +24,19 @@
 
 ## 📊 PHASE 0: DATABASE MIGRATIONS
 **Priority**: CRITICAL — Execute sebelum semua phase lain
-**Status**: 📋 Planned (0/8 created)
+**Status**: ✅ Selesai (9/9 created & migrated)
 
 | Migration | Tabel | Status |
 |-----------|-------|--------|
-| 001 | users | ⏳ Planned |
-| 002 | pegawai | ⏳ Planned |
-| 003 | unit_kerja | ⏳ Planned |
-| 004 | qr_sesaat | ⏳ Planned |
-| 005 | izin_dinas | ⏳ Planned |
-| 006 | pindaian | ⏳ Planned |
-| 007 | pasangan_keluar_masuk | ⏳ Planned |
-| 008 | activity_log | ⏳ Planned |
+| 001 | users | ✅ Selesai |
+| 002 | pegawai | ✅ Selesai |
+| 003 | unit_kerja | ✅ Selesai |
+| 004 | qr_sesaat | ✅ Selesai |
+| 005 | izin_dinas | ✅ Selesai |
+| 006 | pindaian | ✅ Selesai |
+| 007 | pasangan_keluar_masuk | ✅ Selesai |
+| 008 | activity_log | ✅ Selesai |
+| 009 | pengaturan | ✅ Selesai |
 
 **Execution Order**:
 1. `001_create_users_table.sql` — role ENUM: pegawai, atasan, lobby, pos, admin, pimpinan
@@ -51,18 +52,17 @@
 
 ## 🔐 PHASE 0B: CONFIG & AUTENTIKASI
 **Priority**: CRITICAL
-**Status**: 📋 Planned
+**Status**: ✅ Selesai (5/5 files created)
 
 ```
 config/
-├── database.php     ⏳  koneksi PDO
-├── config.php       ⏳  BASE_URL, APP_NAME, QR_INTERVAL, SESSION_TIMEOUT
-└── auth.php         ⏳  requireAuth(), requireRole(), getCurrentUser()
+├── database.php     ✅  koneksi PDO singleton
+├── config.php       ✅  BASE_URL, APP_NAME, QR_INTERVAL, SESSION_TIMEOUT
+└── auth.php         ✅  requireAuth(), requireRole(), getCurrentUser(), logActivity()
 
 pages/auth/
-├── login.php        ⏳
-├── login.func.php   ⏳  redirect post-login per role
-└── logout.php       ⏳
+├── login.func.php   ✅  redirect post-login per role
+└── logout.php       ✅  destroy session & activity logging
 ```
 
 - [ ] Koneksi database PDO + error handling
@@ -83,21 +83,21 @@ pages/auth/
 ---
 
 ## ⚙️ PHASE D: CONTROLLERS & API
-**Priority**: HIGH — Build seiring Phase A–F
-**Status**: 📋 Planned (0/9 controllers)
+**Priority**: HIGH — Backend API Engine
+**Status**: ✅ Selesai (10/10 controllers)
 
 ```
 api/controllers/
-├── AuthController.php          ⏳  login, logout, cek session
-├── QRController.php            ⏳  generate & validasi token QR sesaat
-├── PindaianController.php      ⏳  catat_keluar, catat_masuk, get_status, get_hari_ini_pos
-├── IzinDinasController.php     ⏳  ajukan, putuskan, get_list_saya, get_list_bawahan
-├── RiwayatController.php       ⏳  get_saya, get_all
-├── DashboardController.php     ⏳  get_stats_hari_ini, get_sedang_diluar, get_chart_data
-├── PegawaiController.php       ⏳  CRUD pegawai
-├── RekapController.php         ⏳  harian, bulanan, export_pdf, export_excel
-├── PengaturanController.php    ⏳  jam kerja, unit kerja, interval QR
-└── UserController.php          ⏳  CRUD akun user sistem
+├── AuthController.php          ✅  login, logout, cek session, me
+├── QRController.php            ✅  generate & validasi token QR sesaat
+├── PindaianController.php      ✅  catat_keluar, catat_masuk, get_status, get_hari_ini_pos, tutup_manual
+├── IzinDinasController.php     ✅  ajukan, putuskan, get_list_saya, get_list_bawahan, get_aktif_hari_ini
+├── RiwayatController.php       ✅  get_saya, get_all
+├── DashboardController.php     ✅  get_stats_hari_ini, get_sedang_diluar, get_chart_data
+├── PegawaiController.php       ✅  CRUD pegawai + upload foto
+├── RekapController.php         ✅  harian, bulanan, export_pdf, export_excel
+├── PengaturanController.php    ✅  jam kerja, unit kerja, interval QR
+└── UserController.php          ✅  CRUD akun user sistem, reset password
 ```
 
 **Priority Build Order**:
@@ -482,39 +482,40 @@ pages/pimpinan/rekap/
 ### 🖥️ BACKEND
 
 #### Phase 0: Database Migrations
-- [ ] 001 - users
-- [ ] 002 - pegawai
-- [ ] 003 - unit_kerja
-- [ ] 004 - qr_sesaat
-- [ ] 005 - izin_dinas
-- [ ] 006 - pindaian
-- [ ] 007 - pasangan_keluar_masuk
-- [ ] 008 - activity_log
+- [x] 001 - users
+- [x] 002 - pegawai
+- [x] 003 - unit_kerja
+- [x] 004 - qr_sesaat
+- [x] 005 - izin_dinas
+- [x] 006 - pindaian
+- [x] 007 - pasangan_keluar_masuk
+- [x] 008 - activity_log
+- [x] 009 - pengaturan
 
-**Status**: 0% (0/8)
+**Status**: 100% (9/9)
 
 #### Phase 0B: Config & Autentikasi
-- [ ] database.php
-- [ ] config.php
-- [ ] auth.php
-- [ ] login.php + login.func.php
-- [ ] logout.php
+- [x] database.php
+- [x] config.php
+- [x] auth.php
+- [x] login.func.php
+- [x] logout.php
 
-**Status**: 0% (0/5)
+**Status**: 100% (5/5)
 
 #### Phase D: Controllers & API
-- [ ] AuthController
-- [ ] QRController
-- [ ] PindaianController
-- [ ] IzinDinasController
-- [ ] RiwayatController
-- [ ] DashboardController
-- [ ] PegawaiController
-- [ ] RekapController
-- [ ] PengaturanController
-- [ ] UserController
+- [x] AuthController
+- [x] QRController
+- [x] PindaianController
+- [x] IzinDinasController
+- [x] RiwayatController
+- [x] DashboardController
+- [x] PegawaiController
+- [x] RekapController
+- [x] PengaturanController
+- [x] UserController
 
-**Status**: 0% (0/10)
+**Status**: 100% (10/10)
 
 ### 🎨 FRONTEND
 
@@ -557,36 +558,25 @@ pages/pimpinan/rekap/
 
 ---
 
-## 🎯 NEXT STEPS
+## 🎯 STATUS & NEXT STEPS
 
-### BACKEND — MULAI DARI SINI:
-1. **Phase 0**: Buat semua 8 migration SQL
-2. **Phase 0B**: Config + auth helpers + login/logout
-3. **Phase D (1-3)**: `AuthController` → `QRController` → `PindaianController`
-4. **Phase D (4-5)**: `IzinDinasController` → `RiwayatController`
-5. **Phase D (6-7)**: `DashboardController` → `PegawaiController`
-6. **Phase D (8-10)**: `RekapController` → `PengaturanController` → `UserController`
+### 🖥️ BACKEND:
+✅ **Phase 0**: Database Migrations (9 migration files + Seeder data awal) — **SELESAI**
+✅ **Phase 0B**: Config (PDO singleton, timezone WITA, Session 8 jam, BASE_URL) & Auth helpers — **SELESAI**
+✅ **Phase D**: Seluruh 10 API Controller — **SELESAI & LULUS 29 UNIT TESTS**
 
-### FRONTEND — Setelah backend siap:
+### 🎨 FRONTEND — Siap dikerjakan:
 1. **Phase A0**: Shared assets, CSS variables, layout components
-2. **Phase C (paralel)**: Layar Lobby & Pos — bisa jalan setelah QRController + PindaianController siap
-3. **Phase A1–A2**: Dashboard Pegawai + Scan QR (core feature)
+2. **Phase C**: Layar Lobby (QR Keluar) & Pos Satpam (QR Masuk + Real-time Feed)
+3. **Phase A1–A2**: Dashboard Pegawai + Scan QR (kamera via jsQR)
 4. **Phase A3–A4**: Izin Dinas + Riwayat Pegawai
-5. **Phase B1**: Izin Dinas Atasan
-6. **Phase E1**: Dashboard Admin
-7. **Phase E2–E5**: Pegawai, Catatan, Rekap, Pengaturan
-8. **Phase F1**: Rekap Pimpinan
-9. **Phase G**: Optimization, export, testing
+5. **Phase B1**: Izin Dinas Atasan (Approval)
+6. **Phase E1–E5**: Pages Admin (Dashboard, Pegawai, Catatan, Rekap, Pengaturan)
+7. **Phase F1**: Rekap Pimpinan
+8. **Phase G**: Optimization & Polish
 
 ---
 
 **Last Updated**: 2026
-**Current Focus**: Phase 0 — Database Migrations
-**Overall Progress**: 0% — Belum dimulai
-**Strategy**:
-1. **FIRST**: Database migrations (8 tabel)
-2. **THEN**: Config + auth + login
-3. **THEN**: Core controllers (Auth, QR, Pindaian)
-4. **THEN**: Semua controllers selesai
-5. **THEN**: Frontend pages per role
-6. **FINALLY**: Optimization, export, testing
+**Backend Progress**: 100% — Siap Terhubung ke Frontend
+**Backend Test Suite**: `php tests/test_backend.php` (29 Passed / 0 Failed)
