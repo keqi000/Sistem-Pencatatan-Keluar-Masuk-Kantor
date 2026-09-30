@@ -1,9 +1,10 @@
 # SYSTEM DESIGN - SIKMA
 ## Sistem Informasi Keluar Masuk BPMP Gorontalo
 
-**Versi**: 1.2.0
+**Versi**: 2.0.0
 **Status**: Draft
 **Last Updated**: 2026
+**Stack**: Laravel 11 + Blade + Vanilla JS + Laravel Breeze + Laravel Sanctum
 
 ---
 
@@ -22,14 +23,14 @@ Sistem ini **tidak menggantikan** absen masuk/pulang yang sudah ada. Hanya menca
 
 ## 👥 USER ROLES & ACCESS CONTROL
 
-| Role | Akses | Fungsi |
+| Role | Route | Fungsi |
 |------|-------|--------|
-| **Pegawai** | `/pages/pegawai/` | Scan QR keluar/masuk, ajukan izin dinas, lihat riwayat pribadi |
-| **Atasan Langsung** | `/pages/atasan/` | Setujui atau tolak pengajuan izin dinas bawahan |
-| **Akun Lobby** | `/pages/lobby/` | Hanya tampilkan QR Keluar yang berganti sendiri |
-| **Akun Pos** | `/pages/pos/` | Tampilkan QR Masuk + daftar pindaian hari ini |
-| **Admin Kepegawaian** | `/pages/admin/` | Kelola akun, jam kerja, rekap seluruh balai |
-| **Pimpinan** | `/pages/pimpinan/` | Lihat rekap unit kerjanya (read-only) |
+| **Pegawai** | `/pegawai/*` | Scan QR keluar/masuk, ajukan izin dinas, lihat riwayat pribadi |
+| **Atasan Langsung** | `/atasan/*` | Setujui atau tolak pengajuan izin dinas bawahan |
+| **Akun Lobby** | `/lobby/*` | Hanya tampilkan QR Keluar yang berganti sendiri |
+| **Akun Pos** | `/pos/*` | Tampilkan QR Masuk + daftar pindaian hari ini |
+| **Admin Kepegawaian** | `/admin/*` | Kelola akun, jam kerja, rekap seluruh balai |
+| **Pimpinan** | `/pimpinan/*` | Lihat rekap unit kerjanya (read-only) |
 
 > Akun Lobby dan Akun Pos **tidak bisa** mengisi, mengubah, atau menghapus data. Keduanya hanya menampilkan QR dan hasil pindaian.
 
@@ -39,23 +40,26 @@ Sistem ini **tidak menggantikan** absen masuk/pulang yang sudah ada. Hanya menca
 
 ### Prinsip Arsitektur
 
-1. **Modular per fitur** — setiap folder fitur di `pages/` berisi file sendiri (php tampilan, php fungsi, css, js)
-2. **API terpisah** — semua logika data (ambil/kirim ke DB) hanya ada di `api/controllers/`, tidak di file pages
-3. **Layout terpusat** — header, navbar, sidebar, footer ada di `layouts/` dan di-include oleh setiap halaman
-4. **Pages = tampilan saja** — file PHP di pages hanya mengatur struktur HTML dan memanggil layout + fungsi halaman
+1. **Laravel MVC** — Controller menangani logika, Blade untuk tampilan, Model untuk data
+2. **API terpisah** — semua endpoint data ada di `Api\` controllers, dipanggil via `fetch()` JS
+3. **Blade Layout** — layout header/navbar/sidebar/footer pakai Blade `@extends` dan `@section`
+4. **Views = tampilan saja** — file Blade hanya mengatur struktur HTML, tidak ada query DB langsung
+5. **Middleware per role** — proteksi akses menggunakan Laravel Middleware
+6. **Sanctum** — proteksi semua API endpoint dengan token session
 
-### Pembagian Tanggung Jawab File di Setiap Modul
+### Pembagian Tanggung Jawab
 
-Setiap folder fitur di `pages/` memiliki **2 jenis file PHP**:
+| Lapisan | Lokasi | Peran |
+|---------|--------|-------|
+| **Routes** | `routes/web.php`, `routes/api.php` | Daftarkan semua URL dan arahkan ke controller |
+| **Web Controller** | `app/Http/Controllers/` | Render halaman Blade |
+| **API Controller** | `app/Http/Controllers/Api/` | Return JSON untuk fetch() dari JS |
+| **Model** | `app/Models/` | Eloquent ORM, relasi antar tabel |
+| **Middleware** | `app/Http/Middleware/` | Cek auth + role sebelum masuk halaman/API |
+| **Blade View** | `resources/views/` | Tampilan HTML per modul |
+| **Migration** | `database/migrations/` | Definisi struktur tabel |
 
-| File | Peran |
-|------|-------|
-| `{modul}.php` | **PHP Tampilan** — struktur HTML halaman, include layout, include fungsi |
-| `{modul}.func.php` | **PHP Fungsi Halaman** — helper lokal halaman (format data, build query param, dsb) |
-| `{modul}.css` | Style khusus modul ini |
-| `{modul}.js` | Logic JS: fetch ke API controller, render DOM, event handler |
-
-> **Aturan**: File `{modul}.php` (tampilan) **tidak boleh** query database langsung. Semua data diambil via `fetch()` JS ke `api/controllers/`.
+> **Aturan**: Blade view **tidak boleh** query database langsung. Semua data diambil via `fetch()` JS ke API controller.
 
 ---
 
@@ -63,194 +67,151 @@ Setiap folder fitur di `pages/` memiliki **2 jenis file PHP**:
 
 ```
 SIKMA/
-├── index.php                          # Entry point → redirect ke login
-│
-├── config/
-│   ├── database.php                   # Koneksi PDO
-│   ├── config.php                     # BASE_URL, APP_NAME, QR_INTERVAL, dll
-│   └── auth.php                       # requireAuth(), requireRole(), getCurrentUser()
-│
-├── layouts/                           # Komponen layout global (di-include semua halaman)
-│   ├── header.php                     # <head>, meta, CSS global, logo instansi
-│   ├── navbar.php                     # Top navigation bar (nama user, role, logout)
-│   ├── sidebar.php                    # Sidebar navigasi (menu per role)
-│   ├── footer.php                     # Footer instansi, versi app
-│   └── main.php                       # Wrapper <main> konten halaman
-│
-├── api/
-│   └── controllers/                   # SERVER PHP — semua logika data ada di sini
-│       ├── AuthController.php         # login, logout, cek session
-│       ├── QRController.php           # generate & validasi token QR sesaat
-│       ├── PindaianController.php     # catat_keluar, catat_masuk, get_status
-│       ├── IzinDinasController.php    # ajukan, putuskan, get_list
-│       ├── RiwayatController.php      # get_saya, get_all (admin)
-│       ├── PegawaiController.php      # CRUD pegawai
-│       ├── RekapController.php        # harian, bulanan, export PDF/Excel
-│       ├── PengaturanController.php   # jam kerja, unit kerja, interval QR
-│       └── UserController.php         # CRUD akun user sistem
-│
-├── pages/
-│   ├── auth/
-│   │   ├── login.php                  # Tampilan form login
-│   │   ├── login.func.php             # Fungsi: proses redirect post-login per role
-│   │   ├── login.css
-│   │   └── logout.php                 # Destroy session → redirect login
-│   │
-│   ├── pegawai/
-│   │   ├── dashboard/
-│   │   │   ├── dashboard.php          # Tampilan: status, tombol scan, riwayat hari ini
-│   │   │   ├── dashboard.func.php     # Fungsi: format durasi, tentukan tombol aktif
-│   │   │   ├── dashboard.css
-│   │   │   └── dashboard.js           # Fetch status saya, render badge, auto-refresh
-│   │   ├── scan/
-│   │   │   ├── scan.php               # Tampilan: viewfinder kamera, form keperluan
-│   │   │   ├── scan.func.php          # Fungsi: parse hasil QR, tentukan jenis scan
-│   │   │   ├── scan.css
-│   │   │   └── scan.js                # Aktifkan kamera, decode QR, kirim ke API
-│   │   ├── izin-dinas/
-│   │   │   ├── izin-dinas.php         # Tampilan: form ajukan + daftar izin
-│   │   │   ├── izin-dinas.func.php    # Fungsi: format status badge, validasi tanggal
-│   │   │   ├── izin-dinas.css
-│   │   │   └── izin-dinas.js          # Fetch list izin, submit form, render status
-│   │   └── riwayat/
-│   │       ├── riwayat.php            # Tampilan: tabel riwayat + filter
-│   │       ├── riwayat.func.php       # Fungsi: format durasi, build filter query
-│   │       ├── riwayat.css
-│   │       └── riwayat.js             # Fetch riwayat, render tabel, pagination
-│   │
-│   ├── atasan/
-│   │   └── izin-dinas/
-│   │       ├── izin-dinas.php         # Tampilan: daftar pengajuan bawahan + tab
-│   │       ├── izin-dinas.func.php    # Fungsi: format status, hitung pending
-│   │       ├── izin-dinas.css
-│   │       └── izin-dinas.js          # Fetch list bawahan, tombol setujui/tolak
-│   │
-│   ├── lobby/
-│   │   └── layar/
-│   │       ├── layar.php              # Tampilan: fullscreen QR Keluar (tanpa layout nav)
-│   │       ├── layar.func.php         # Fungsi: hitung countdown, format jam
-│   │       ├── layar.css              # Fullscreen styling
-│   │       └── layar.js               # Polling token QR, render QR code, countdown
-│   │
-│   ├── pos/
-│   │   └── layar/
-│   │       ├── layar.php              # Tampilan: split — QR Masuk + daftar pindaian
-│   │       ├── layar.func.php         # Fungsi: format daftar, highlight baru
-│   │       ├── layar.css              # Split layout styling
-│   │       └── layar.js               # Polling QR + polling daftar pindaian hari ini
-│   │
-│   ├── admin/
-│   │   ├── dashboard/
-│   │   │   ├── dashboard.php          # Tampilan: stat cards, tabel sedang diluar, chart
-│   │   │   ├── dashboard.func.php     # Fungsi: format stat, warna badge status
-│   │   │   ├── dashboard.css
-│   │   │   └── dashboard.js           # Fetch stats, render chart, auto-refresh 60s
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Api/                        # API Controllers (return JSON)
+│   │   │   │   ├── QRController.php
+│   │   │   │   ├── PindaianController.php
+│   │   │   │   ├── IzinDinasController.php
+│   │   │   │   ├── RiwayatController.php
+│   │   │   │   ├── DashboardController.php
+│   │   │   │   ├── PegawaiController.php
+│   │   │   │   ├── RekapController.php
+│   │   │   │   ├── PengaturanController.php
+│   │   │   │   └── UserController.php
+│   │   │   ├── Auth/                       # Laravel Breeze Auth Controllers
+│   │   │   ├── PegawaiPageController.php   # Render halaman pegawai
+│   │   │   ├── AtasanPageController.php    # Render halaman atasan
+│   │   │   ├── LobbyPageController.php     # Render layar lobby
+│   │   │   ├── PosPageController.php       # Render layar pos
+│   │   │   ├── AdminPageController.php     # Render halaman admin
+│   │   │   └── PimpinanPageController.php  # Render halaman pimpinan
+│   │   └── Middleware/
+│   │       └── RoleMiddleware.php          # Cek role user
+│   └── Models/
+│       ├── User.php
+│       ├── Pegawai.php
+│       ├── UnitKerja.php
+│       ├── QrSesaat.php
+│       ├── IzinDinas.php
+│       ├── Pindaian.php
+│       ├── PasanganKeluarMasuk.php
+│       └── ActivityLog.php
+├── database/
+│   └── migrations/
+│       ├── 001_create_users_table.php
+│       ├── 002_create_pegawai_table.php
+│       ├── 003_create_unit_kerja_table.php
+│       ├── 004_create_qr_sesaat_table.php
+│       ├── 005_create_izin_dinas_table.php
+│       ├── 006_create_pindaian_table.php
+│       ├── 007_create_pasangan_keluar_masuk_table.php
+│       └── 008_create_activity_log_table.php
+├── resources/
+│   ├── views/
+│   │   ├── layouts/
+│   │   │   ├── app.blade.php               # Layout utama (header+navbar+sidebar+footer)
+│   │   │   └── fullscreen.blade.php        # Layout fullscreen (lobby & pos)
+│   │   ├── components/
+│   │   │   ├── sidebar.blade.php
+│   │   │   ├── navbar.blade.php
+│   │   │   └── badge-status.blade.php
+│   │   ├── auth/
+│   │   │   └── login.blade.php
 │   │   ├── pegawai/
-│   │   │   ├── pegawai.php            # Tampilan: grid daftar pegawai + filter
-│   │   │   ├── pegawai.func.php       # Fungsi: build filter, format status
-│   │   │   ├── pegawai.css
-│   │   │   ├── pegawai.js             # Fetch list, render grid, delete confirm
-│   │   │   ├── create.php             # Tampilan: form tambah pegawai
-│   │   │   ├── create.func.php        # Fungsi: validasi form, preview foto
-│   │   │   ├── edit.php               # Tampilan: form edit pegawai
-│   │   │   ├── edit.func.php          # Fungsi: pre-populate form, validasi
-│   │   │   ├── form.css               # Style shared form create & edit
-│   │   │   └── form.js                # Submit form, upload foto, validasi client
-│   │   ├── catatan/
-│   │   │   ├── catatan.php            # Tampilan: tabel semua catatan + filter
-│   │   │   ├── catatan.func.php       # Fungsi: format status, build filter
-│   │   │   ├── catatan.css
-│   │   │   ├── catatan.js             # Fetch catatan, tutup manual, delete
-│   │   │   ├── edit.php               # Tampilan: form koreksi catatan
-│   │   │   ├── edit.func.php
-│   │   │   └── edit.js
-│   │   ├── rekap/
-│   │   │   ├── rekap.php              # Tampilan: tab harian & bulanan + filter
-│   │   │   ├── rekap.func.php         # Fungsi: format menit ke jam:menit
-│   │   │   ├── rekap.css
-│   │   │   └── rekap.js               # Fetch rekap, render tabel, tombol unduh
-│   │   └── pengaturan/
-│   │       ├── pengaturan.php         # Tampilan: form jam kerja, unit, interval QR
-│   │       ├── pengaturan.func.php    # Fungsi: load setting saat ini
-│   │       ├── pengaturan.css
-│   │       └── pengaturan.js          # Fetch settings, submit update, CRUD unit kerja
-│   │
-│   └── pimpinan/
-│       └── rekap/
-│           ├── rekap.php              # Tampilan: rekap unit sendiri (read-only)
-│           ├── rekap.func.php         # Fungsi: filter unit otomatis dari session
-│           ├── rekap.css
-│           └── rekap.js               # Fetch rekap unit, render, tombol unduh
-│
-├── assets/
+│   │   │   ├── dashboard.blade.php
+│   │   │   ├── scan.blade.php
+│   │   │   ├── izin-dinas.blade.php
+│   │   │   └── riwayat.blade.php
+│   │   ├── atasan/
+│   │   │   └── izin-dinas.blade.php
+│   │   ├── lobby/
+│   │   │   └── layar.blade.php
+│   │   ├── pos/
+│   │   │   └── layar.blade.php
+│   │   ├── admin/
+│   │   │   ├── dashboard.blade.php
+│   │   │   ├── pegawai/
+│   │   │   │   ├── index.blade.php
+│   │   │   │   ├── create.blade.php
+│   │   │   │   └── edit.blade.php
+│   │   │   ├── catatan/
+│   │   │   │   ├── index.blade.php
+│   │   │   │   └── edit.blade.php
+│   │   │   ├── rekap.blade.php
+│   │   │   └── pengaturan.blade.php
+│   │   └── pimpinan/
+│   │       └── rekap.blade.php
 │   ├── css/
-│   │   ├── main.css                   # Reset, typography, global utility classes
-│   │   └── components.css             # Shared components: card, badge, modal, tabel
-│   ├── js/
-│   │   ├── main.js                    # Global helpers: formatDate, showToast, dll
-│   │   └── qr-scanner.js              # Library jsQR / ZXing untuk decode QR via kamera
+│   │   ├── app.css                     # CSS global + design system variables
+│   │   └── components.css              # Shared components: card, badge, modal
+│   └── js/
+│       ├── app.js                      # Global helpers: formatDate, showToast
+│       └── qr-scanner.js               # Wrapper jsQR untuk decode QR via kamera
+├── public/
 │   └── img/
 │       ├── logo-bpmp.png
-│       └── foto-pegawai/              # Upload foto pegawai
-│
-└── database/
-    └── migrations/
-        ├── 001_create_users_table.sql
-        ├── 002_create_pegawai_table.sql
-        ├── 003_create_unit_kerja_table.sql
-        ├── 004_create_qr_sesaat_table.sql
-        ├── 005_create_izin_dinas_table.sql
-        ├── 006_create_pindaian_table.sql
-        ├── 007_create_pasangan_keluar_masuk_table.sql
-        └── 008_create_activity_log_table.sql
+│       └── foto-pegawai/               # Upload foto pegawai
+├── routes/
+│   ├── web.php                         # Route halaman Blade per role
+│   └── api.php                         # Route API endpoint (dilindungi Sanctum)
+└── vite.config.js                      # Bundler CSS & JS
 ```
 
 ---
 
 ## 🧩 LAYOUT SISTEM
 
-Semua halaman (kecuali lobby & pos yang fullscreen) menggunakan layout standar:
+Semua halaman (kecuali lobby & pos yang fullscreen) menggunakan layout utama `layouts/app.blade.php`:
 
 ```
 ┌─────────────────────────────────────────────┐
-│                  HEADER                      │  ← layouts/header.php
+│                  HEADER                      │  ← layouts/app.blade.php
 │  Logo BPMP | Nama Instansi                  │
 ├──────────┬──────────────────────────────────┤
-│          │           NAVBAR                  │  ← layouts/navbar.php
+│          │           NAVBAR                  │  ← components/navbar.blade.php
 │          │  Nama User | Role | Logout        │
 │ SIDEBAR  ├──────────────────────────────────┤
 │          │                                   │
-│ Menu     │           MAIN CONTENT            │  ← layouts/main.php
-│ navigasi │   (konten dari tiap modul)        │
+│ Menu     │        @yield('content')          │  ← konten dari tiap view
 │ per role │                                   │
-│          │                                   │
 ├──────────┴──────────────────────────────────┤
-│                  FOOTER                      │  ← layouts/footer.php
+│                  FOOTER                      │
 │  BPMP Gorontalo © 2026 | Versi 1.0          │
 └─────────────────────────────────────────────┘
 ```
 
-### Cara Include Layout di Setiap Halaman
+### Pola Blade di Setiap View
 
-Setiap file `{modul}.php` di pages mengikuti pola ini:
+```blade
+{{-- resources/views/pegawai/dashboard.blade.php --}}
+@extends('layouts.app')
 
-```php
-<?php
-require_once '../../../config/auth.php';
-requireRole('pegawai');                      // proteksi akses
+@section('title', 'Dashboard')
 
-require_once 'dashboard.func.php';           // fungsi lokal halaman ini
-?>
-<?php include '../../../layouts/header.php'; ?>
-<?php include '../../../layouts/navbar.php'; ?>
-<?php include '../../../layouts/sidebar.php'; ?>
-<?php include '../../../layouts/main.php'; ?>  <!-- buka wrapper main -->
+@section('content')
+    <div class="pegawai-dashboard-status">
+        {{-- konten halaman --}}
+    </div>
+@endsection
 
-    <!-- KONTEN HALAMAN -->
-    <div class="pegawai-dashboard-status"> ... </div>
+@push('scripts')
+    <script src="{{ asset('js/pegawai/dashboard.js') }}"></script>
+@endpush
+```
 
-<?php include '../../../layouts/main_end.php'; ?>  <!-- tutup wrapper main -->
-<?php include '../../../layouts/footer.php'; ?>
+### Layout Fullscreen (Lobby & Pos)
+
+```blade
+{{-- resources/views/lobby/layar.blade.php --}}
+@extends('layouts.fullscreen')
+
+@section('content')
+    <div class="lobby-layar">
+        {{-- QR fullscreen --}}
+    </div>
+@endsection
 ```
 
 ### Sidebar Menu per Role
@@ -269,235 +230,322 @@ require_once 'dashboard.func.php';           // fungsi lokal halaman ini
 ## 📂 MODUL APLIKASI
 
 ### 1. 🔐 AUTENTIKASI
-**Path**: `/pages/auth/`
-**Files**: `login.php`, `login.func.php`, `login.css`, `logout.php`
+**Path**: `resources/views/auth/`
+**Controller**: `app/Http/Controllers/Auth/` (Laravel Breeze)
 
-- Login username + password, semua role pakai halaman yang sama
-- `login.func.php` menangani redirect post-login berdasarkan role:
-  - `pegawai` → `/pages/pegawai/dashboard/`
-  - `atasan` → `/pages/atasan/izin-dinas/`
-  - `lobby` → `/pages/lobby/layar/`
-  - `pos` → `/pages/pos/layar/`
-  - `admin` → `/pages/admin/dashboard/`
-  - `pimpinan` → `/pages/pimpinan/rekap/`
-- Session timeout 8 jam idle
+- Login username + password via Laravel Breeze
+- Setelah login, redirect per role ditangani di `App\Providers\AppServiceProvider` atau custom `AuthenticatedSessionController`:
+  - `pegawai` → `/pegawai/dashboard`
+  - `atasan` → `/atasan/izin-dinas`
+  - `lobby` → `/lobby/layar`
+  - `pos` → `/pos/layar`
+  - `admin` → `/admin/dashboard`
+  - `pimpinan` → `/pimpinan/rekap`
+- Session timeout dikonfigurasi di `config/session.php`
 - Akun lobby & pos dibiarkan login permanen selama jam kerja
 
 ---
 
 ### 2. 🏠 DASHBOARD PEGAWAI
-**Path**: `/pages/pegawai/dashboard/`
-**Files**: `dashboard.php`, `dashboard.func.php`, `dashboard.css`, `dashboard.js`
+**Route**: `GET /pegawai/dashboard`
+**Controller**: `PegawaiPageController@dashboard`
+**View**: `resources/views/pegawai/dashboard.blade.php`
 
-- `dashboard.php` — struktur HTML: badge status, tombol scan, tabel riwayat hari ini
-- `dashboard.func.php` — `formatDurasi()`, `tentukanTombolAktif()`, `getLabelStatus()`
-- `dashboard.js` — fetch `PindaianController::get_status_saya`, render badge & tombol kondisional, auto-refresh 30 detik
+- Controller hanya render view, tidak ada query DB
+- Semua data diambil via `fetch()` JS ke API
 
 **Konten tampilan**:
 - Badge besar: **Di Kantor** (hijau) / **Sedang di Luar** (oranye) + durasi berjalan
 - Tombol **Scan QR Keluar** atau **Scan QR Masuk** (kondisional sesuai status)
 - Info izin dinas aktif hari ini (jika ada)
 - Tabel riwayat 5 pindaian terakhir hari ini
+- Auto-refresh status setiap 30 detik
+
+**API yang dipanggil JS**:
+- `GET /api/pindaian/status-saya`
+- `GET /api/izin-dinas/aktif-hari-ini`
 
 **CSS Classes**: `.pegawai-dashboard-status`, `.pegawai-dashboard-actions`, `.pegawai-dashboard-today`
 
 ---
 
 ### 3. 📷 SCAN QR (PEGAWAI)
-**Path**: `/pages/pegawai/scan/`
-**Files**: `scan.php`, `scan.func.php`, `scan.css`, `scan.js`
+**Route**: `GET /pegawai/scan`
+**Controller**: `PegawaiPageController@scan`
+**View**: `resources/views/pegawai/scan.blade.php`
 
-- `scan.php` — struktur HTML: viewfinder kamera, area hasil scan, form pilih keperluan
-- `scan.func.php` — `parseQRToken()`, `tentukanJenisScan()`, `validasiKonteks()`
-- `scan.js` — aktifkan kamera via `getUserMedia`, decode QR dengan jsQR, kirim token ke `QRController::validate`, lalu ke `PindaianController::catat_keluar` atau `catat_masuk`
+- Controller hanya render view
+- Semua logika scan ditangani di `resources/js/pegawai/scan.js`
 
 **Alur di halaman ini**:
-1. Kamera aktif → pegawai arahkan ke QR di laptop lobby/pos
-2. Token terbaca → kirim ke server untuk validasi
-3. Jika QR Keluar: tampilkan pilihan keperluan (Dinas / Keperluan Lain)
-4. Jika QR Masuk: langsung konfirmasi kembali
-5. Tampilkan feedback sukses/gagal
+1. Kamera aktif via `getUserMedia`
+2. jsQR decode token dari QR di layar lobby/pos
+3. POST token ke `POST /api/qr/validate`
+4. Jika QR Keluar: tampilkan pilihan keperluan (Dinas / Keperluan Lain)
+5. Jika QR Masuk: langsung konfirmasi kembali
+6. Tampilkan feedback sukses/gagal via toast
+
+**API yang dipanggil JS**:
+- `POST /api/qr/validate`
+- `POST /api/pindaian/catat-keluar`
+- `POST /api/pindaian/catat-masuk`
 
 **CSS Classes**: `.scan-viewfinder`, `.scan-result`, `.scan-keperluan-form`
 
 ---
 
 ### 4. 📋 IZIN DINAS (PEGAWAI)
-**Path**: `/pages/pegawai/izin-dinas/`
-**Files**: `izin-dinas.php`, `izin-dinas.func.php`, `izin-dinas.css`, `izin-dinas.js`
+**Route**: `GET /pegawai/izin-dinas`
+**Controller**: `PegawaiPageController@izinDinas`
+**View**: `resources/views/pegawai/izin-dinas.blade.php`
 
-- `izin-dinas.php` — struktur HTML: form ajukan + tabel daftar izin
-- `izin-dinas.func.php` — `formatStatusBadge()`, `validasiTanggalIzin()`
-- `izin-dinas.js` — fetch `IzinDinasController::get_list_saya`, submit form ajukan, render status badge
+- Controller hanya render view
+- Semua data diambil dan dikirim via `fetch()` JS ke API
 
 **Konten tampilan**:
-- Form: tanggal, perkiraan jam pergi, perkiraan jam kembali, tujuan, keperluan
-- Tabel daftar izin: tanggal, tujuan, status (menunggu/disetujui/ditolak), catatan atasan
+- Form ajukan: tanggal, perkiraan jam pergi & kembali, tujuan, keperluan
+- Tabel daftar izin: tanggal, tujuan, status badge, catatan atasan
+- Validasi tanggal tidak boleh di masa lalu (client-side)
+
+**API yang dipanggil JS**:
+- `GET /api/izin-dinas`
+- `POST /api/izin-dinas`
 
 **CSS Classes**: `.izin-form`, `.izin-list`, `.izin-status-badge`
 
 ---
 
 ### 5. 📜 RIWAYAT (PEGAWAI)
-**Path**: `/pages/pegawai/riwayat/`
-**Files**: `riwayat.php`, `riwayat.func.php`, `riwayat.css`, `riwayat.js`
+**Route**: `GET /pegawai/riwayat`
+**Controller**: `PegawaiPageController@riwayat`
+**View**: `resources/views/pegawai/riwayat.blade.php`
 
-- `riwayat.php` — struktur HTML: filter + tabel riwayat
-- `riwayat.func.php` — `formatDurasi()`, `buildFilterQuery()`, `getLabelKeperluan()`
-- `riwayat.js` — fetch `RiwayatController::get_saya`, render tabel, pagination, filter
+- Controller hanya render view
+- Semua data diambil via `fetch()` JS ke API
 
 **Konten tampilan**:
 - Filter: date range, jenis keperluan
 - Tabel: Tanggal, Jam Keluar, Jam Kembali, Durasi, Keperluan, Status
 - Pagination 15 per halaman
 
+**API yang dipanggil JS**:
+- `GET /api/riwayat`
+
 **CSS Classes**: `.riwayat-table`, `.riwayat-filter`, `.riwayat-status`
 
 ---
 
 ### 6. ✅ IZIN DINAS (ATASAN)
-**Path**: `/pages/atasan/izin-dinas/`
-**Files**: `izin-dinas.php`, `izin-dinas.func.php`, `izin-dinas.css`, `izin-dinas.js`
+**Route**: `GET /atasan/izin-dinas`
+**Controller**: `AtasanPageController@izinDinas`
+**View**: `resources/views/atasan/izin-dinas.blade.php`
 
-- `izin-dinas.php` — struktur HTML: tab Menunggu/Disetujui/Ditolak + kartu pengajuan
-- `izin-dinas.func.php` — `hitungPending()`, `formatKartuIzin()`
-- `izin-dinas.js` — fetch `IzinDinasController::get_list_bawahan`, tombol setujui/tolak kirim ke `putuskan`
+- Controller hanya render view
+- Semua data diambil dan dikirim via `fetch()` JS ke API
+
+**Konten tampilan**:
+- Tab: Menunggu / Disetujui / Ditolak
+- Kartu pengajuan: nama pegawai, tanggal, tujuan, keperluan
+- Tombol Setujui + input catatan opsional
+- Tombol Tolak + input alasan wajib
+- Badge counter pending di tab
+
+**API yang dipanggil JS**:
+- `GET /api/izin-dinas/bawahan`
+- `POST /api/izin-dinas/{id}/putuskan`
 
 **CSS Classes**: `.atasan-izin-list`, `.atasan-izin-card`, `.atasan-izin-actions`
 
 ---
 
 ### 7. 🖥️ LAYAR LOBBY
-**Path**: `/pages/lobby/layar/`
-**Files**: `layar.php`, `layar.func.php`, `layar.css`, `layar.js`
+**Route**: `GET /lobby/layar`
+**Controller**: `LobbyPageController@layar`
+**View**: `resources/views/lobby/layar.blade.php`
 
-> Halaman ini **tidak menggunakan layout** (header/navbar/sidebar/footer). Fullscreen murni.
+> Halaman ini menggunakan `layouts/fullscreen.blade.php` — tanpa navbar/sidebar/footer.
 
-- `layar.php` — struktur HTML fullscreen: area QR besar, countdown, jam, nama instansi
-- `layar.func.php` — `hitungCountdown()`, `formatJamSekarang()`
-- `layar.js` — polling `QRController::get_current?jenis=keluar` setiap N detik, render QR baru dengan library QRCode.js, update countdown
+- Controller hanya render view
+- Semua logika polling QR ditangani di JS
 
 **Konten tampilan**:
-- QR Code besar di tengah
+- QR Code besar di tengah layar
 - Countdown "berganti dalam X detik"
 - Jam digital real-time
-- Nama instansi + label "QR KELUAR"
+- Label "QR KELUAR" + nama instansi
+
+**API yang dipanggil JS**:
+- `GET /api/qr/current?jenis=keluar`
 
 **CSS Classes**: `.lobby-layar`, `.lobby-qr-container`, `.lobby-timer`, `.lobby-clock`
 
 ---
 
 ### 8. 🛡️ LAYAR POS SECURITY
-**Path**: `/pages/pos/layar/`
-**Files**: `layar.php`, `layar.func.php`, `layar.css`, `layar.js`
+**Route**: `GET /pos/layar`
+**Controller**: `PosPageController@layar`
+**View**: `resources/views/pos/layar.blade.php`
 
-> Halaman ini **tidak menggunakan layout**. Fullscreen split.
+> Halaman ini menggunakan `layouts/fullscreen.blade.php` — tanpa navbar/sidebar/footer.
 
-- `layar.php` — struktur HTML split: kiri QR, kanan daftar pindaian
-- `layar.func.php` — `formatDaftarPindaian()`, `isEntryBaru()`
-- `layar.js` — polling QR Masuk + polling `PindaianController::get_hari_ini_pos` setiap 10 detik, highlight baris baru
+- Controller hanya render view
+- Semua logika polling QR + daftar pindaian ditangani di JS
 
 **Konten tampilan**:
-- Kiri: QR Masuk besar + countdown
-- Kanan: tabel pindaian hari ini (Nama, Unit, Jam, Tempat, Jenis, Keperluan), baris baru disorot
+- Layout split: kiri QR Masuk besar + countdown, kanan tabel pindaian hari ini
+- Tabel: Nama, Unit, Jam, Tempat, Jenis, Keperluan
+- Baris baru disorot otomatis beberapa detik
+- Polling daftar pindaian setiap 10 detik
+
+**API yang dipanggil JS**:
+- `GET /api/qr/current?jenis=masuk`
+- `GET /api/pindaian/hari-ini-pos`
 
 **CSS Classes**: `.pos-layar`, `.pos-qr-side`, `.pos-daftar-side`, `.pos-highlight-new`
 
 ---
 
 ### 9. 📊 DASHBOARD ADMIN
-**Path**: `/pages/admin/dashboard/`
-**Files**: `dashboard.php`, `dashboard.func.php`, `dashboard.css`, `dashboard.js`
+**Route**: `GET /admin/dashboard`
+**Controller**: `AdminPageController@dashboard`
+**View**: `resources/views/admin/dashboard.blade.php`
 
-- `dashboard.php` — struktur HTML: 4 stat cards, tabel sedang di luar, grafik bar
-- `dashboard.func.php` — `warnaStatCard()`, `formatStatCard()`, `labelStatusBadge()`
-- `dashboard.js` — fetch `DashboardController::get_stats_hari_ini` + `get_sedang_diluar` + `get_chart_data`, render Chart.js, auto-refresh 60 detik
+- Controller hanya render view
+- Semua data diambil via `fetch()` JS ke API
 
 **Konten tampilan**:
-- Stat cards: Sedang di Luar, Sudah Kembali, Belum Kembali, Total Keluar Hari Ini
-- Tabel: nama, unit, jam keluar, keperluan, estimasi kembali, durasi berjalan (badge merah jika terlambat)
-- Bar chart: aktivitas keluar per jam 07.00–17.00
+- 4 stat cards: Sedang di Luar, Sudah Kembali, Belum Kembali, Total Keluar Hari Ini
+- Tabel sedang di luar: nama, unit, jam keluar, keperluan, durasi berjalan
+- Badge merah jika durasi melebihi estimasi
+- Bar chart aktivitas keluar per jam 07.00–17.00 (Chart.js)
+- Auto-refresh 60 detik
+
+**API yang dipanggil JS**:
+- `GET /api/dashboard/stats`
+- `GET /api/dashboard/sedang-diluar`
+- `GET /api/dashboard/chart`
 
 **CSS Classes**: `.admin-dashboard-stats`, `.admin-dashboard-table`, `.admin-dashboard-chart`
 
 ---
 
 ### 10. 👥 MANAJEMEN PEGAWAI (ADMIN)
-**Path**: `/pages/admin/pegawai/`
-**Files**: `pegawai.php`, `pegawai.func.php`, `pegawai.css`, `pegawai.js`, `create.php`, `create.func.php`, `edit.php`, `edit.func.php`, `form.css`, `form.js`
+**Route**: `GET /admin/pegawai`
+**Controller**: `AdminPageController@pegawai`, `pegawaiCreate`, `pegawaiEdit`
+**View**: `resources/views/admin/pegawai/index.blade.php`, `create.blade.php`, `edit.blade.php`
 
-- `pegawai.php` — daftar pegawai grid + filter + search
-- `pegawai.func.php` — `buildFilterQuery()`, `formatStatusBadge()`
-- `pegawai.js` — fetch `PegawaiController::get_list`, render grid, delete confirm modal
-- `create.php` / `edit.php` — form tambah/edit pegawai
-- `create.func.php` / `edit.func.php` — validasi form, pre-populate data edit
-- `form.js` — submit form, upload foto preview, validasi client-side
+- Controller hanya render view, data diambil via `fetch()` JS
 
-**Data**: NIP, Nama, Jabatan, Unit Kerja, Atasan Langsung, Nomor HP, Foto, Status
+**Konten tampilan**:
+- Grid daftar pegawai: foto, nama, NIP, jabatan, unit kerja, status
+- Search & filter: unit kerja, jabatan, status aktif/tidak
+- CRUD: Tambah, Edit, Hapus + delete confirmation modal
+- Upload foto pegawai dengan preview
+- Assign atasan langsung
+- Pagination 12 per halaman
+
+**API yang dipanggil JS**:
+- `GET /api/pegawai`
+- `GET /api/pegawai/{id}`
+- `POST /api/pegawai`
+- `PUT /api/pegawai/{id}`
+- `DELETE /api/pegawai/{id}`
 
 **CSS Classes**: `.admin-pegawai-grid`, `.admin-pegawai-card`, `.admin-pegawai-form`
 
 ---
 
 ### 11. 📝 MANAJEMEN CATATAN (ADMIN)
-**Path**: `/pages/admin/catatan/`
-**Files**: `catatan.php`, `catatan.func.php`, `catatan.css`, `catatan.js`, `edit.php`, `edit.func.php`, `edit.js`
+**Route**: `GET /admin/catatan`, `GET /admin/catatan/{id}/edit`
+**Controller**: `AdminPageController@catatan`, `catatanEdit`
+**View**: `resources/views/admin/catatan/index.blade.php`, `edit.blade.php`
 
-- `catatan.php` — tabel semua catatan + filter (pegawai, tanggal, status)
-- `catatan.func.php` — `formatStatusCatatan()`, `buildFilterCatatan()`
-- `catatan.js` — fetch `RiwayatController::get_all`, tutup manual, hapus, render tabel
-- `edit.php` — form koreksi jam/keperluan catatan
-- `edit.func.php` — pre-populate data catatan yang akan diedit
+- Controller hanya render view, data diambil via `fetch()` JS
 
-**Fitur**: tutup manual catatan terbuka, koreksi jam, hapus, tambah manual
+**Konten tampilan**:
+- Tabel semua pindaian + filter: pegawai, tanggal, status
+- Tutup manual catatan yang masih terbuka (belum kembali)
+- Koreksi jam keluar/kembali dan keperluan
+- Hapus catatan dengan konfirmasi modal
+- Pagination 20 per halaman
+
+**API yang dipanggil JS**:
+- `GET /api/riwayat/semua`
+- `POST /api/pindaian/catat-masuk` (tutup manual)
+- `PUT /api/riwayat/{id}`
+- `DELETE /api/riwayat/{id}`
 
 **CSS Classes**: `.admin-catatan-table`, `.admin-catatan-filter`
 
 ---
 
 ### 12. 📈 REKAP (ADMIN)
-**Path**: `/pages/admin/rekap/`
-**Files**: `rekap.php`, `rekap.func.php`, `rekap.css`, `rekap.js`
+**Route**: `GET /admin/rekap`
+**Controller**: `AdminPageController@rekap`
+**View**: `resources/views/admin/rekap.blade.php`
 
-- `rekap.php` — struktur HTML: tab Harian/Bulanan + filter + tabel + tombol unduh
-- `rekap.func.php` — `formatMenitKeJam()`, `hitungSummary()`, `buildFilterRekap()`
-- `rekap.js` — fetch `RekapController::harian` atau `bulanan`, render tabel, trigger export
+- Controller hanya render view, data diambil via `fetch()` JS
 
 **Konten tampilan**:
 - Tab Harian: pilih tanggal → tabel semua pegawai (keluar, kembali, durasi, keperluan)
-- Tab Bulanan: pilih bulan → per pegawai (hari keluar, tanpa izin, total menit, belum kembali)
+- Tab Bulanan: pilih bulan → per pegawai (hari keluar, total menit, belum kembali)
+- Filter unit kerja
 - Tombol Unduh PDF & Unduh Excel
+
+**API yang dipanggil JS**:
+- `GET /api/rekap/harian?tanggal=YYYY-MM-DD`
+- `GET /api/rekap/bulanan?bulan=YYYY-MM`
+- `GET /api/rekap/export-pdf`
+- `GET /api/rekap/export-excel`
 
 **CSS Classes**: `.admin-rekap-filter`, `.admin-rekap-table`, `.admin-rekap-summary`
 
 ---
 
 ### 13. ⚙️ PENGATURAN (ADMIN)
-**Path**: `/pages/admin/pengaturan/`
-**Files**: `pengaturan.php`, `pengaturan.func.php`, `pengaturan.css`, `pengaturan.js`
+**Route**: `GET /admin/pengaturan`
+**Controller**: `AdminPageController@pengaturan`
+**View**: `resources/views/admin/pengaturan.blade.php`
 
-- `pengaturan.php` — struktur HTML: section jam kerja, interval QR, unit kerja, profil instansi
-- `pengaturan.func.php` — `loadSettingSekarang()`, `formatJamKerja()`
-- `pengaturan.js` — fetch `PengaturanController::get_jam_kerja`, submit update, CRUD unit kerja
+- Controller hanya render view, data diambil via `fetch()` JS
 
 **Konten tampilan**:
 - Jam kerja: jam mulai, jam selesai, jam istirahat mulai & selesai
-- Aturan istirahat: toggle hitung/tidak
+- Toggle: hitung/tidak hitung jam istirahat
 - Interval QR: input detik (default 30)
 - Unit Kerja: tabel CRUD
 - Profil instansi: nama, logo, alamat
+
+**API yang dipanggil JS**:
+- `GET /api/pengaturan/jam-kerja`
+- `PUT /api/pengaturan/jam-kerja`
+- `GET /api/pengaturan/unit-kerja`
+- `POST /api/pengaturan/unit-kerja`
+- `PUT /api/pengaturan/unit-kerja/{id}`
+- `DELETE /api/pengaturan/unit-kerja/{id}`
 
 **CSS Classes**: `.admin-pengaturan-section`, `.admin-pengaturan-form`
 
 ---
 
 ### 14. 📋 REKAP PIMPINAN
-**Path**: `/pages/pimpinan/rekap/`
-**Files**: `rekap.php`, `rekap.func.php`, `rekap.css`, `rekap.js`
+**Route**: `GET /pimpinan/rekap`
+**Controller**: `PimpinanPageController@rekap`
+**View**: `resources/views/pimpinan/rekap.blade.php`
 
-- `rekap.php` — sama seperti rekap admin tapi unit kerja otomatis dari session pimpinan
-- `rekap.func.php` — `getUnitDariSession()`, `formatMenitKeJam()`
-- `rekap.js` — fetch rekap dengan filter unit otomatis, render tabel, tombol unduh
+- Controller hanya render view, unit kerja pimpinan dikirim ke view via `compact()`
+- Data rekap diambil via `fetch()` JS ke API dengan filter unit otomatis
+
+**Konten tampilan**:
+- Sama seperti rekap admin tapi unit kerja otomatis dari session pimpinan
+- Read-only: tidak ada tombol edit/hapus
+- Tombol Unduh PDF & Unduh Excel tetap tersedia
+
+**API yang dipanggil JS**:
+- `GET /api/rekap/harian?tanggal=YYYY-MM-DD&unit_id={id}`
+- `GET /api/rekap/bulanan?bulan=YYYY-MM&unit_id={id}`
+- `GET /api/rekap/export-pdf`
+- `GET /api/rekap/export-excel`
 
 **CSS Classes**: `.pimpinan-rekap-filter`, `.pimpinan-rekap-table`
 
@@ -506,72 +554,100 @@ require_once 'dashboard.func.php';           // fungsi lokal halaman ini
 ## 🗄️ DATABASE STRUCTURE
 
 ### `users`
-```sql
-id, username, password, full_name,
-role ENUM('pegawai','atasan','lobby','pos','admin','pimpinan'),
-status ENUM('aktif','tidak_aktif'),
-pegawai_id INT FK nullable,
-created_at, updated_at
+```php
+$table->id();
+$table->string('username')->unique();
+$table->string('password');
+$table->string('full_name');
+$table->enum('role', ['pegawai','atasan','lobby','pos','admin','pimpinan']);
+$table->enum('status', ['aktif','tidak_aktif'])->default('aktif');
+$table->foreignId('pegawai_id')->nullable()->constrained('pegawai');
+$table->timestamps();
 ```
 
 ### `unit_kerja`
-```sql
-id, nama_unit, kode_unit, pimpinan_id INT FK ke users nullable, created_at
+```php
+$table->id();
+$table->string('nama_unit');
+$table->string('kode_unit')->unique();
+$table->foreignId('pimpinan_id')->nullable()->constrained('users');
+$table->timestamp('created_at')->useCurrent();
 ```
 
 ### `pegawai`
-```sql
-id, nip, nama_lengkap, jabatan,
-unit_kerja_id INT FK,
-atasan_id INT FK ke pegawai nullable,
-nomor_hp, foto,
-status ENUM('aktif','tidak_aktif'),
-created_at, updated_at
+```php
+$table->id();
+$table->string('nip')->unique();
+$table->string('nama_lengkap');
+$table->string('jabatan');
+$table->foreignId('unit_kerja_id')->constrained('unit_kerja');
+$table->foreignId('atasan_id')->nullable()->constrained('pegawai');
+$table->string('nomor_hp')->nullable();
+$table->string('foto')->nullable();
+$table->enum('status', ['aktif','tidak_aktif'])->default('aktif');
+$table->timestamps();
 ```
 
 ### `qr_sesaat`
-```sql
-id, token VARCHAR UNIQUE,
-jenis ENUM('keluar','masuk'),
-expired_at DATETIME,
-created_at
+```php
+$table->id();
+$table->string('token')->unique();
+$table->enum('jenis', ['keluar','masuk']);
+$table->dateTime('expired_at');
+$table->timestamp('created_at')->useCurrent();
 ```
 
 ### `izin_dinas`
-```sql
-id, pegawai_id FK, atasan_id FK ke users,
-tanggal DATE, perkiraan_jam_pergi TIME, perkiraan_jam_kembali TIME,
-tujuan VARCHAR, keperluan TEXT,
-status ENUM('menunggu','disetujui','ditolak'),
-catatan_atasan TEXT nullable,
-created_at, updated_at
+```php
+$table->id();
+$table->foreignId('pegawai_id')->constrained('pegawai');
+$table->foreignId('atasan_id')->constrained('users');
+$table->date('tanggal');
+$table->time('perkiraan_jam_pergi');
+$table->time('perkiraan_jam_kembali');
+$table->string('tujuan');
+$table->text('keperluan');
+$table->enum('status', ['menunggu','disetujui','ditolak'])->default('menunggu');
+$table->text('catatan_atasan')->nullable();
+$table->timestamps();
 ```
 
 ### `pindaian` ⭐
-```sql
-id, pegawai_id FK,
-jenis ENUM('keluar','masuk'),
-jam DATETIME, tempat ENUM('lobby','pos'),
-keperluan_jenis ENUM('dinas','keperluan_lain') nullable,
-izin_dinas_id FK nullable,
-pasangan_id FK ke pasangan_keluar_masuk nullable,
-created_at
+```php
+$table->id();
+$table->foreignId('pegawai_id')->constrained('pegawai');
+$table->enum('jenis', ['keluar','masuk']);
+$table->dateTime('jam');
+$table->enum('tempat', ['lobby','pos']);
+$table->enum('keperluan_jenis', ['dinas','keperluan_lain'])->nullable();
+$table->foreignId('izin_dinas_id')->nullable()->constrained('izin_dinas');
+$table->foreignId('pasangan_id')->nullable()->constrained('pasangan_keluar_masuk');
+$table->timestamp('created_at')->useCurrent();
 ```
 
 ### `pasangan_keluar_masuk` ⭐
-```sql
-id, pegawai_id FK,
-pindaian_keluar_id FK, jam_keluar DATETIME,
-pindaian_masuk_id FK nullable, jam_kembali DATETIME nullable,
-durasi_menit INT nullable,
-status ENUM('terbuka','kembali','belum_kembali'),
-created_at, updated_at
+```php
+$table->id();
+$table->foreignId('pegawai_id')->constrained('pegawai');
+$table->foreignId('pindaian_keluar_id')->constrained('pindaian');
+$table->dateTime('jam_keluar');
+$table->foreignId('pindaian_masuk_id')->nullable()->constrained('pindaian');
+$table->dateTime('jam_kembali')->nullable();
+$table->integer('durasi_menit')->nullable();
+$table->enum('status', ['terbuka','kembali','belum_kembali'])->default('terbuka');
+$table->timestamps();
 ```
 
 ### `activity_log`
-```sql
-id, user_id FK, action, target_table, target_id,
-keterangan, ip_address, created_at
+```php
+$table->id();
+$table->foreignId('user_id')->constrained('users');
+$table->string('action');
+$table->string('target_table');
+$table->unsignedBigInteger('target_id')->nullable();
+$table->text('keterangan')->nullable();
+$table->string('ip_address')->nullable();
+$table->timestamp('created_at')->useCurrent();
 ```
 
 ---
@@ -580,39 +656,41 @@ keterangan, ip_address, created_at
 
 ### Alur Pegawai Keluar:
 ```
-Ponsel → Login → Dashboard
-→ Klik "Scan QR Keluar" → scan.php aktifkan kamera
-→ Arahkan ke laptop lobby → jsQR decode token
-→ scan.js POST token ke QRController::validate
+Ponsel → Login (Laravel Breeze) → redirect /pegawai/dashboard
+→ Klik "Scan QR Keluar" → GET /pegawai/scan
+→ JS aktifkan kamera via getUserMedia
+→ jsQR decode token dari layar lobby
+→ POST /api/qr/validate (Sanctum)
 → Jika valid: tampilkan pilihan keperluan
-→ Submit → PindaianController::catat_keluar
+→ POST /api/pindaian/catat-keluar
 → Nama muncul di layar pos (via polling)
 ```
 
 ### Alur Pegawai Kembali:
 ```
-Ponsel → Dashboard → Klik "Scan QR Masuk"
-→ Arahkan ke laptop pos → decode token
-→ POST ke QRController::validate
-→ Jika valid: PindaianController::catat_masuk
+Ponsel → GET /pegawai/dashboard → Klik "Scan QR Masuk"
+→ GET /pegawai/scan
+→ jsQR decode token dari layar pos
+→ POST /api/qr/validate (Sanctum)
+→ Jika valid: POST /api/pindaian/catat-masuk
 → Durasi dihitung otomatis → pasangan ditutup
 → Nama & jam kembali muncul di layar pos
 ```
 
 ### Alur QR Berganti:
 ```
-Server generate token baru tiap N detik → simpan qr_sesaat
-Laptop lobby/pos: layar.js polling QRController::get_current tiap N detik
+Laravel Scheduler generate token baru tiap N detik → simpan ke qr_sesaat
+Laptop lobby/pos: JS polling GET /api/qr/current tiap N detik
 → Render QR baru dengan QRCode.js → reset countdown
-Token lama: expired_at terlewati → server tolak
+Token lama: expired_at terlewati → server tolak dengan 422
 ```
 
 ### Alur Izin Dinas:
 ```
-Pegawai ajukan izin → IzinDinasController::ajukan → status: menunggu
-Atasan login → IzinDinasController::get_list_bawahan → klik Setujui/Tolak
-→ IzinDinasController::putuskan → status update
-Saat scan keluar: IzinDinasController::get_aktif_hari_ini → tampilkan opsi Dinas
+Pegawai POST /api/izin-dinas → status: menunggu
+Atasan GET /api/izin-dinas/bawahan → klik Setujui/Tolak
+→ POST /api/izin-dinas/{id}/putuskan → status update
+Saat scan keluar: GET /api/izin-dinas/aktif-hari-ini → tampilkan opsi Dinas
 ```
 
 ---
@@ -662,87 +740,102 @@ Saat scan keluar: IzinDinasController::get_aktif_hari_ini → tampilkan opsi Din
 
 ## 🔐 SECURITY
 
+### Middleware
+
 ```php
-requireAuth();                           // semua halaman
-requireRole('admin');
-requireRole(['admin','pimpinan']);
-requireRole('lobby');
-requireRole('pos');
-requireRole(['pegawai','atasan','admin']);
+// routes/web.php
+Route::middleware(['auth', 'role:pegawai'])->group(function () { ... });
+Route::middleware(['auth', 'role:admin'])->group(function () { ... });
+Route::middleware(['auth', 'role:atasan'])->group(function () { ... });
+Route::middleware(['auth', 'role:lobby'])->group(function () { ... });
+Route::middleware(['auth', 'role:pos'])->group(function () { ... });
+Route::middleware(['auth', 'role:pimpinan'])->group(function () { ... });
+
+// routes/api.php
+Route::middleware(['auth:sanctum', 'role:pegawai'])->group(function () { ... });
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () { ... });
 ```
 
-- Password: `password_hash()` BCRYPT
-- SQL injection: PDO prepared statements
-- XSS: `htmlspecialchars()` semua output
-- CSRF: token di semua form POST
-- QR token: UUID v4 + `expired_at`, satu kali pakai
-- HTTPS wajib (izin kamera browser)
+### Checklist Keamanan
+
+- Password: `Hash::make()` bcrypt via Laravel
+- SQL injection: Eloquent ORM + query builder (prepared statements otomatis)
+- XSS: Blade `{{ }}` auto-escape, `{!! !!}` hanya jika benar-benar perlu
+- CSRF: `@csrf` di semua form Blade, otomatis divalidasi Laravel
+- API auth: Laravel Sanctum (session-based untuk SPA)
+- QR token: UUID v4 + `expired_at`, satu kali pakai, hapus setelah divalidasi
+- HTTPS wajib di production (izin kamera browser)
+- Rate limiting: `throttle:60,1` pada route API
 
 ---
 
 ## 🔌 API ENDPOINTS
 
+Semua route API didaftarkan di `routes/api.php`, dilindungi `auth:sanctum`.
+
 ```
-# Auth
-POST   AuthController.php?action=login
-POST   AuthController.php?action=logout
+# Auth (routes/web.php — pakai Laravel Breeze)
+POST   /login
+POST   /logout
 
 # QR
-GET    QRController.php?action=get_current&jenis=keluar
-GET    QRController.php?action=get_current&jenis=masuk
-POST   QRController.php?action=validate
+GET    /api/qr/current?jenis=keluar
+GET    /api/qr/current?jenis=masuk
+POST   /api/qr/validate
 
 # Pindaian
-POST   PindaianController.php?action=catat_keluar
-POST   PindaianController.php?action=catat_masuk
-GET    PindaianController.php?action=get_status_saya
-GET    PindaianController.php?action=get_hari_ini_pos
+POST   /api/pindaian/catat-keluar
+POST   /api/pindaian/catat-masuk
+GET    /api/pindaian/status-saya
+GET    /api/pindaian/hari-ini-pos
 
 # Izin Dinas
-GET    IzinDinasController.php?action=get_list_saya
-POST   IzinDinasController.php?action=ajukan
-GET    IzinDinasController.php?action=get_list_bawahan
-POST   IzinDinasController.php?action=putuskan
-GET    IzinDinasController.php?action=get_aktif_hari_ini
+GET    /api/izin-dinas
+POST   /api/izin-dinas
+GET    /api/izin-dinas/bawahan
+POST   /api/izin-dinas/{id}/putuskan
+GET    /api/izin-dinas/aktif-hari-ini
 
 # Riwayat
-GET    RiwayatController.php?action=get_saya
-GET    RiwayatController.php?action=get_all
+GET    /api/riwayat
+GET    /api/riwayat/semua
 
 # Dashboard Admin
-GET    DashboardController.php?action=get_stats_hari_ini
-GET    DashboardController.php?action=get_sedang_diluar
-GET    DashboardController.php?action=get_chart_data
+GET    /api/dashboard/stats
+GET    /api/dashboard/sedang-diluar
+GET    /api/dashboard/chart
 
 # Pegawai
-GET    PegawaiController.php?action=get_list
-GET    PegawaiController.php?action=get_detail&id=X
-POST   PegawaiController.php?action=create
-POST   PegawaiController.php?action=update
-DELETE PegawaiController.php?action=delete
+GET    /api/pegawai
+GET    /api/pegawai/{id}
+POST   /api/pegawai
+PUT    /api/pegawai/{id}
+DELETE /api/pegawai/{id}
 
 # Rekap
-GET    RekapController.php?action=harian&tanggal=YYYY-MM-DD
-GET    RekapController.php?action=bulanan&bulan=YYYY-MM
-GET    RekapController.php?action=export_pdf
-GET    RekapController.php?action=export_excel
+GET    /api/rekap/harian?tanggal=YYYY-MM-DD
+GET    /api/rekap/bulanan?bulan=YYYY-MM
+GET    /api/rekap/export-pdf
+GET    /api/rekap/export-excel
 
 # Pengaturan
-GET    PengaturanController.php?action=get_jam_kerja
-POST   PengaturanController.php?action=update_jam_kerja
-GET    PengaturanController.php?action=get_unit_kerja
-POST   PengaturanController.php?action=crud_unit_kerja
+GET    /api/pengaturan/jam-kerja
+PUT    /api/pengaturan/jam-kerja
+GET    /api/pengaturan/unit-kerja
+POST   /api/pengaturan/unit-kerja
+PUT    /api/pengaturan/unit-kerja/{id}
+DELETE /api/pengaturan/unit-kerja/{id}
 
 # User
-GET    UserController.php?action=get_list
-POST   UserController.php?action=create
-POST   UserController.php?action=update
-DELETE UserController.php?action=delete
-POST   UserController.php?action=reset_password
+GET    /api/users
+POST   /api/users
+PUT    /api/users/{id}
+DELETE /api/users/{id}
+POST   /api/users/{id}/reset-password
 ```
 
 ---
 
 **Status**: 📝 Design Document
-**Version**: 1.2.0
+**Version**: 2.0.0
 **Last Updated**: 2026
