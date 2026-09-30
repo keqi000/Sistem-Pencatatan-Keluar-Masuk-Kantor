@@ -144,8 +144,7 @@ SIKMA/
 │   │   └── pimpinan/
 │   │       └── rekap.blade.php
 │   ├── css/
-│   │   ├── app.css                     # CSS global + design system variables
-│   │   └── components.css              # Shared components: card, badge, modal
+│   │   └── app.css                     # Tailwind v4 + custom color tokens (@theme)
 │   └── js/
 │       ├── app.js                      # Global helpers: formatDate, showToast
 │       └── qr-scanner.js               # Wrapper jsQR untuk decode QR via kamera
@@ -697,44 +696,68 @@ Saat scan keluar: GET /api/izin-dinas/aktif-hari-ini → tampilkan opsi Dinas
 
 ## 🎨 DESIGN SYSTEM
 
+**CSS Framework**: Tailwind CSS v4 via `@tailwindcss/vite`
+
+Custom color tokens didefinisikan di `resources/css/app.css` menggunakan `@theme`:
+
 ```css
-:root {
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F4F6F9;
-    --color-primary: #1A5276;      /* Biru pemerintah */
-    --color-secondary: #D4AC0D;    /* Emas */
-    --color-success: #1E8449;      /* Hijau — Di Kantor / Sudah Kembali */
-    --color-danger: #C0392B;       /* Merah — Belum Kembali / Terlambat */
-    --color-warning: #D68910;      /* Oranye — Sedang di Luar */
-    --color-info: #1A6FA8;         /* Biru muda — Dinas */
-    --text-primary: #1A1A1A;
-    --text-secondary: #555555;
-    --shadow-light: rgba(26, 82, 118, 0.08);
-    --shadow-medium: rgba(0, 0, 0, 0.1);
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
+@theme {
+    /* Primary */
+    --color-primary:  #0a2e5c;   /* Biru Gelap — sidebar, heading, teks utama */
+    --color-brand:    #0073e6;   /* Biru Cerah — tombol utama, link aktif */
+
+    /* Accent */
+    --color-accent:   #ff9f1c;   /* Kuning/Oranye — highlight, badge */
+    --color-sky:      #5cc2f2;   /* Biru Muda — card border, grafis */
+
+    /* Background */
+    --color-soft:     #dbeeff;   /* Biru Soft — section bg, hero */
+    --color-canvas:   #ffffff;   /* Putih — background utama */
+    --color-bg:       #f0f7ff;   /* Page background — soft blue tint */
+
+    /* Semantic (status) */
+    --color-success:  #16a34a;   /* Hijau — Di Kantor / Disetujui */
+    --color-danger:   #dc2626;   /* Merah — Belum Kembali / Ditolak */
+    --color-warning:  #ff9f1c;   /* Oranye — Sedang di Luar / Menunggu */
+    --color-info:     #0073e6;   /* Biru — Dinas */
+
+    /* Text */
+    --color-text:     #0a2e5c;
+    --color-muted:    #64748b;
 }
 ```
 
-### Status Badge:
-- Di Kantor → `--color-success`
-- Sedang di Luar → `--color-warning`
-- Belum Kembali (terlambat) → `--color-danger`
-- Dinas → `--color-info`
+### Token Tailwind yang tersedia:
+| Token | Hex | Penggunaan |
+|-------|-----|------------|
+| `bg-primary` / `text-primary` | `#0a2e5c` | Sidebar, header, heading |
+| `bg-brand` / `text-brand` | `#0073e6` | Tombol utama, link aktif, badge role |
+| `bg-accent` / `text-accent` | `#ff9f1c` | Highlight, badge warning |
+| `bg-sky` / `text-sky` | `#5cc2f2` | Border card, elemen grafis |
+| `bg-soft` | `#dbeeff` | Section background, hero |
+| `bg-canvas` | `#ffffff` | Background card, navbar, footer |
+| `bg-bg` | `#f0f7ff` | Background halaman |
+| `text-muted` | `#64748b` | Teks sekunder |
 
-### CSS Naming:
-- `pegawai-{modul}-{komponen}`
-- `atasan-{modul}-{komponen}`
-- `admin-{modul}-{komponen}`
-- `pimpinan-{modul}-{komponen}`
-- `lobby-{komponen}`, `pos-{komponen}`
-- Shared: `sikma-{komponen}`
+### Status Badge (`components/badge-status.blade.php`):
+- Di Kantor → `bg-green-100 text-success border-green-200`
+- Sedang di Luar → `bg-orange-100 text-warning border-orange-200`
+- Belum Kembali → `bg-red-100 text-danger border-red-200`
+- Dinas → `bg-soft text-brand border-sky/40`
+- Menunggu → `bg-orange-100 text-warning border-orange-200`
+- Disetujui → `bg-green-100 text-success border-green-200`
+- Ditolak → `bg-red-100 text-danger border-red-200`
+
+### Styling Approach:
+- Semua styling menggunakan **Tailwind utility classes** langsung di Blade
+- Tidak ada custom CSS class naming (tidak pakai BEM)
+- Sidebar menggunakan CSS gradient inline: `linear-gradient(180deg, #0a2e5c 0%, #0d3a73 100%)`
+- Komponen reusable dibuat sebagai Blade component di `resources/views/components/`
 
 ### Responsive:
-- Desktop 1200px+ | Laptop 992–1199px | Tablet 768–991px | Mobile <768px
-- Halaman scan pegawai: prioritas mobile
-- Layar lobby & pos: fullscreen landscape laptop
+- Tailwind breakpoints: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px)
+- Halaman scan pegawai: prioritas mobile (`sm:` prefix)
+- Layar lobby & pos: fullscreen landscape laptop (`lg:` prefix)
 
 ---
 

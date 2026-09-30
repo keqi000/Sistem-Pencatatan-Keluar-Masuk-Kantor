@@ -6,6 +6,30 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* === SIKMA Color Palette === */
+
+    /* Primary */
+    --color-primary:    #0a2e5c;   /* Biru Gelap — teks, heading, sidebar */
+    --color-brand:      #0073e6;   /* Biru Cerah — tombol utama, link aktif */
+
+    /* Accent */
+    --color-accent:     #ff9f1c;   /* Kuning/Oranye — highlight, badge, warning */
+    --color-sky:        #5cc2f2;   /* Biru Muda — card border, grafis, info */
+
+    /* Background */
+    --color-soft:       #dbeeff;   /* Biru Soft — section bg, hero */
+    --color-canvas:     #ffffff;   /* Putih — background utama */
+
+    /* Semantic (status) */
+    --color-success:    #16a34a;   /* Hijau — Di Kantor / Disetujui */
+    --color-danger:     #dc2626;   /* Merah — Belum Kembali / Ditolak */
+    --color-warning:    #ff9f1c;   /* Oranye — Sedang di Luar / Menunggu */
+    --color-info:       #0073e6;   /* Biru — Dinas */
+
+    /* Text */
+    --color-text:       #0a2e5c;
+    --color-muted:      #64748b;
+    --color-bg:         #f0f7ff;   /* Page background — soft blue tint */
 }
