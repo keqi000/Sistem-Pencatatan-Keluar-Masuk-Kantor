@@ -2,86 +2,122 @@
 
 @section('title', 'Rekap Unit Kerja')
 
+@push('styles')
+<style>
+    .filter-input {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1.5px solid #dbeeff;
+        background: #f8fbff;
+        color: #0a2e5c;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .filter-input:focus {
+        border-color: #5cc2f2;
+        box-shadow: 0 0 0 3px rgba(92,194,242,0.15);
+        background: #ffffff;
+    }
+    .tab-btn {
+        padding: 7px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .tab-btn.active {
+        background: linear-gradient(135deg, #0073e6, #0056b3);
+        color: white;
+        box-shadow: 0 3px 10px rgba(0,115,230,0.25);
+    }
+    .tab-btn.inactive {
+        background: transparent;
+        color: #64748b;
+    }
+    .tab-btn.inactive:hover { background: #f0f7ff; color: #0a2e5c; }
+
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover { background: #f8fbff; }
+</style>
+@endpush
+
 @section('content')
-<div class="flex flex-col gap-6">
+<div style="display:flex;flex-direction:column;gap:20px;">
 
     {{-- Info Unit --}}
-    <div class="bg-soft border border-sky/40 rounded-2xl px-5 py-4 flex items-center gap-3">
-        <span class="text-brand text-xl">🏢</span>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:#ffffff;border-radius:16px;border:1px solid rgba(92,194,242,0.25);box-shadow:0 2px 12px rgba(10,46,92,0.05);">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#0a2e5c,#0073e6);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,115,230,0.2);">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
         <div>
-            <p class="text-primary font-semibold text-sm">Unit Kerja Anda</p>
-            <p id="nama-unit" class="text-muted text-sm">Memuat...</p>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Unit Kerja Anda</p>
+            <p id="nama-unit" style="font-size:14px;font-weight:700;color:#0a2e5c;margin-top:1px;">Memuat...</p>
         </div>
     </div>
 
-    {{-- Tab Harian / Bulanan --}}
-    <div class="flex gap-1 bg-canvas rounded-xl border border-soft p-1 w-fit shadow-sm">
-        <button onclick="switchTab('harian')" data-tab="harian"
-            class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition cursor-pointer bg-brand text-white shadow">
-            Harian
-        </button>
-        <button onclick="switchTab('bulanan')" data-tab="bulanan"
-            class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition cursor-pointer text-muted hover:text-primary">
-            Bulanan
-        </button>
-    </div>
+    {{-- Filter Card --}}
+    <div style="background:#ffffff;border-radius:16px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 2px 12px rgba(10,46,92,0.05);padding:18px 20px;">
 
-    {{-- Filter --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-5">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div id="filter-harian" class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold text-primary">Tanggal</label>
-                <input type="date" id="input-tanggal"
-                    class="px-3 py-2 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+        {{-- Tab --}}
+        <div style="display:flex;gap:4px;background:#f8fbff;border-radius:10px;border:1px solid #dbeeff;padding:3px;width:fit-content;margin-bottom:16px;">
+            <button class="tab-btn active" data-tab="harian" onclick="switchTab('harian')">Harian</button>
+            <button class="tab-btn inactive" data-tab="bulanan" onclick="switchTab('bulanan')">Bulanan</button>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;">
+            <div id="filter-harian" style="display:flex;flex-direction:column;gap:5px;">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Tanggal</label>
+                <input type="date" id="input-tanggal" class="filter-input">
             </div>
-            <div id="filter-bulanan" class="hidden flex-col gap-1.5">
-                <label class="text-xs font-semibold text-primary">Bulan</label>
-                <input type="month" id="input-bulan"
-                    class="px-3 py-2 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+            <div id="filter-bulanan" style="display:none;flex-direction:column;gap:5px;">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Bulan</label>
+                <input type="month" id="input-bulan" class="filter-input">
             </div>
-            <button onclick="loadRekap()"
-                class="px-5 py-2 bg-brand text-white text-sm font-semibold rounded-lg
-                       hover:bg-blue-700 transition shadow shadow-brand/30 cursor-pointer">
+
+            <button onclick="loadRekap()" style="padding:8px 20px;border-radius:10px;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,115,230,0.25);transition:all 0.15s;"
+                onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
                 Tampilkan
             </button>
-            <div class="flex gap-2 ml-auto">
-                <a id="btn-pdf" href="#"
-                    class="px-4 py-2 bg-danger text-white text-sm font-semibold rounded-lg
-                           hover:bg-red-700 transition shadow shadow-red-200">
-                    ↓ PDF
+
+            <div style="display:flex;gap:8px;margin-left:auto;">
+                <a id="btn-pdf" href="#" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;"
+                    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    PDF
                 </a>
-                <a id="btn-excel" href="#"
-                    class="px-4 py-2 bg-success text-white text-sm font-semibold rounded-lg
-                           hover:bg-green-700 transition shadow shadow-green-200">
-                    ↓ Excel
+                <a id="btn-excel" href="#" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;"
+                    onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Excel
                 </a>
             </div>
         </div>
     </div>
 
     {{-- Tabel --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-primary font-bold text-base">Data Rekap</h2>
-            <span id="rekap-info" class="text-muted text-xs"></span>
+    <div style="background:#ffffff;border-radius:16px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 2px 12px rgba(10,46,92,0.05);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f0f7ff;">
+            <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Data Rekap</p>
+            <span id="rekap-info" style="font-size:12px;font-weight:600;color:#0073e6;padding:3px 12px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);"></span>
         </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
                 <thead id="rekap-thead">
-                    <tr class="border-b border-soft text-muted text-left">
-                        <th class="pb-2 font-semibold">Nama Pegawai</th>
-                        <th class="pb-2 font-semibold">Jam Keluar</th>
-                        <th class="pb-2 font-semibold">Jam Kembali</th>
-                        <th class="pb-2 font-semibold">Durasi</th>
-                        <th class="pb-2 font-semibold">Keperluan</th>
-                        <th class="pb-2 font-semibold">Status</th>
+                    <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Nama Pegawai</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Keluar</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Kembali</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Durasi</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Keperluan</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
                     </tr>
                 </thead>
-                <tbody id="rekap-tbody" class="divide-y divide-soft">
-                    <tr><td colspan="6" class="py-6 text-center text-muted">Pilih tanggal/bulan lalu klik Tampilkan</td></tr>
+                <tbody id="rekap-tbody">
+                    <tr><td colspan="6" style="padding:48px;text-align:center;color:#94a3b8;font-size:13px;">Pilih tanggal lalu klik Tampilkan</td></tr>
                 </tbody>
             </table>
         </div>
@@ -100,16 +136,11 @@ const headers = {
 
 let activeTab = 'harian';
 
-// Set default tanggal & bulan
 document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
-document.getElementById('input-bulan').value = new Date().toISOString().slice(0, 7);
+document.getElementById('input-bulan').value   = new Date().toISOString().slice(0, 7);
 
-// Load nama unit
 async function loadNamaUnit() {
-    if (!unitKerjaId) {
-        document.getElementById('nama-unit').textContent = 'Unit kerja tidak ditemukan';
-        return;
-    }
+    if (!unitKerjaId) { document.getElementById('nama-unit').textContent = 'Unit kerja tidak ditemukan'; return; }
     try {
         const res = await fetch('/api/pengaturan/unit-kerja', { headers });
         const { data } = await res.json();
@@ -122,106 +153,110 @@ function switchTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.tab-btn').forEach(btn => {
         const isActive = btn.dataset.tab === tab;
-        btn.className = btn.className
-            .replace(isActive ? 'text-muted hover:text-primary' : 'bg-brand text-white shadow',
-                     isActive ? 'bg-brand text-white shadow'     : 'text-muted hover:text-primary');
+        btn.className = 'tab-btn ' + (isActive ? 'active' : 'inactive');
     });
-    document.getElementById('filter-harian').classList.toggle('hidden', tab !== 'harian');
-    document.getElementById('filter-harian').classList.toggle('flex', tab === 'harian');
-    document.getElementById('filter-bulanan').classList.toggle('hidden', tab !== 'bulanan');
-    document.getElementById('filter-bulanan').classList.toggle('flex', tab === 'bulanan');
+    document.getElementById('filter-harian').style.display  = tab === 'harian'  ? 'flex' : 'none';
+    document.getElementById('filter-bulanan').style.display = tab === 'bulanan' ? 'flex' : 'none';
 
-    // Update thead
+    const thStyle = 'padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;';
+    const trStyle = 'background:#f8fbff;border-bottom:1px solid #dbeeff;';
     const thead = document.getElementById('rekap-thead');
+
     if (tab === 'bulanan') {
-        thead.innerHTML = `<tr class="border-b border-soft text-muted text-left">
-            <th class="pb-2 font-semibold">Nama Pegawai</th>
-            <th class="pb-2 font-semibold">Hari Keluar</th>
-            <th class="pb-2 font-semibold">Total Menit</th>
-            <th class="pb-2 font-semibold">Belum Kembali</th>
+        thead.innerHTML = `<tr style="${trStyle}">
+            <th style="${thStyle}">Nama Pegawai</th>
+            <th style="${thStyle}">Hari Keluar</th>
+            <th style="${thStyle}">Total Menit</th>
+            <th style="${thStyle}">Belum Kembali</th>
         </tr>`;
     } else {
-        thead.innerHTML = `<tr class="border-b border-soft text-muted text-left">
-            <th class="pb-2 font-semibold">Nama Pegawai</th>
-            <th class="pb-2 font-semibold">Jam Keluar</th>
-            <th class="pb-2 font-semibold">Jam Kembali</th>
-            <th class="pb-2 font-semibold">Durasi</th>
-            <th class="pb-2 font-semibold">Keperluan</th>
-            <th class="pb-2 font-semibold">Status</th>
+        thead.innerHTML = `<tr style="${trStyle}">
+            <th style="${thStyle}">Nama Pegawai</th>
+            <th style="${thStyle}">Jam Keluar</th>
+            <th style="${thStyle}">Jam Kembali</th>
+            <th style="${thStyle}">Durasi</th>
+            <th style="${thStyle}">Keperluan</th>
+            <th style="${thStyle}">Status</th>
         </tr>`;
     }
     document.getElementById('rekap-tbody').innerHTML =
-        `<tr><td colspan="6" class="py-6 text-center text-muted">Pilih ${tab === 'harian' ? 'tanggal' : 'bulan'} lalu klik Tampilkan</td></tr>`;
+        `<tr><td colspan="6" style="padding:48px;text-align:center;color:#94a3b8;font-size:13px;">Pilih ${tab === 'harian' ? 'tanggal' : 'bulan'} lalu klik Tampilkan</td></tr>`;
 }
 
 async function loadRekap() {
     const tbody = document.getElementById('rekap-tbody');
-    tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Memuat...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:48px;text-align:center;">
+        <div style="width:32px;height:32px;border-radius:50%;border:3px solid #dbeeff;border-top-color:#0073e6;animation:spin 0.8s linear infinite;margin:0 auto 10px;"></div>
+        <p style="font-size:13px;color:#94a3b8;">Memuat data...</p>
+    </td></tr>`;
 
     const params = new URLSearchParams();
     if (unitKerjaId) params.append('unit_id', unitKerjaId);
 
     let url;
     if (activeTab === 'harian') {
-        params.append('tanggal', document.getElementById('input-tanggal').value);
+        const tgl = document.getElementById('input-tanggal').value;
+        params.append('tanggal', tgl);
         url = '/api/rekap/harian?' + params;
-        updateExportLinks('tanggal=' + document.getElementById('input-tanggal').value);
+        updateExportLinks(`tipe=harian&tanggal=${tgl}`);
     } else {
-        params.append('bulan', document.getElementById('input-bulan').value);
+        const bln = document.getElementById('input-bulan').value;
+        params.append('bulan', bln);
         url = '/api/rekap/bulanan?' + params;
-        updateExportLinks('bulan=' + document.getElementById('input-bulan').value);
+        updateExportLinks(`tipe=bulanan&bulan=${bln}`);
     }
 
     try {
-        const res = await fetch(url, { headers });
-        const { data, meta } = await res.json();
+        const res  = await fetch(url, { headers });
+        const { data } = await res.json();
         const list = data ?? [];
 
-        document.getElementById('rekap-info').textContent = `${list.length} pegawai`;
+        document.getElementById('rekap-info').textContent = `${list.length} data`;
+        document.getElementById('rekap-info').style.display = list.length ? 'inline' : 'none';
 
         if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Tidak ada data</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="padding:48px;text-align:center;color:#94a3b8;font-size:13px;">Tidak ada data untuk periode ini</td></tr>`;
             return;
         }
 
-        const statusClass = {
-            kembali:       'bg-green-100 text-success border-green-200',
-            terbuka:       'bg-orange-100 text-warning border-orange-200',
-            belum_kembali: 'bg-red-100 text-danger border-red-200',
+        const statusBadge = {
+            kembali:       { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Kembali' },
+            terbuka:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
+            belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
         };
 
+        const tdBase = 'padding:11px 16px;font-size:13px;border-bottom:1px solid #f0f7ff;';
+
         if (activeTab === 'harian') {
-            tbody.innerHTML = list.map(r => `
-                <tr class="hover:bg-soft/50 transition">
-                    <td class="py-2.5 pr-4 text-text font-medium">${r.nama_lengkap ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-text">${r.jam_keluar ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-text">${r.jam_kembali ?? '—'}</td>
-                    <td class="py-2.5 pr-4 text-muted">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
-                    <td class="py-2.5 pr-4 text-text capitalize">${r.keperluan_jenis?.replace('_', ' ') ?? '-'}</td>
-                    <td class="py-2.5">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border
-                            ${statusClass[r.status] ?? 'bg-soft text-brand border-sky/40'}">
-                            ${r.status?.replace('_', ' ') ?? '-'}
+            tbody.innerHTML = list.map(r => {
+                const s = statusBadge[r.status] ?? { bg:'#dbeeff', color:'#0073e6', border:'#bfdfff', label: r.status ?? '-' };
+                return `<tr>
+                    <td style="${tdBase}font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
+                    <td style="${tdBase}color:#0073e6;font-weight:600;">${r.jam_keluar ?? '-'}</td>
+                    <td style="${tdBase}color:#64748b;">${r.jam_kembali ?? '—'}</td>
+                    <td style="${tdBase}color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
+                    <td style="${tdBase}color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
+                    <td style="${tdBase}">
+                        <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
+                            ${s.label}
                         </span>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         } else {
-            tbody.innerHTML = list.map(r => `
-                <tr class="hover:bg-soft/50 transition">
-                    <td class="py-2.5 pr-4 text-text font-medium">${r.nama_lengkap ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-text">${r.hari_keluar ?? 0} hari</td>
-                    <td class="py-2.5 pr-4 text-text">${r.total_menit ?? 0} mnt</td>
-                    <td class="py-2.5">
-                        ${r.belum_kembali > 0
-                            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-100 text-danger border-red-200">${r.belum_kembali}x</span>`
-                            : `<span class="text-muted">—</span>`}
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = list.map(r => `<tr>
+                <td style="${tdBase}font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
+                <td style="${tdBase}color:#64748b;">${r.jumlah_hari_keluar ?? 0} hari</td>
+                <td style="${tdBase}color:#64748b;">${r.total_menit_keluar ?? 0} mnt</td>
+                <td style="${tdBase}">
+                    ${r.belum_kembali > 0
+                        ? `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">${r.belum_kembali}x</span>`
+                        : `<span style="color:#94a3b8;">—</span>`}
+                </td>
+            </tr>`).join('');
         }
     } catch (_) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Gagal memuat data</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:48px;text-align:center;color:#dc2626;font-size:13px;">Gagal memuat data</td></tr>`;
     }
 }
 
@@ -233,4 +268,5 @@ function updateExportLinks(query) {
 
 loadNamaUnit();
 </script>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 @endpush

@@ -98,6 +98,10 @@ let activeTab = 'harian';
 document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
 document.getElementById('input-bulan').value   = new Date().toISOString().slice(0, 7);
 
+const todayStr = new Date().toISOString().split('T')[0];
+document.getElementById('btn-pdf').href   = `/api/rekap/export-pdf?tipe=harian&tanggal=${todayStr}`;
+document.getElementById('btn-excel').href = `/api/rekap/export-excel?tipe=harian&tanggal=${todayStr}`;
+
 async function loadUnits() {
     try {
         const res = await fetch('/api/pengaturan/unit-kerja', { headers });
@@ -155,12 +159,12 @@ async function loadRekap() {
         const tanggal = document.getElementById('input-tanggal').value;
         params.append('tanggal', tanggal);
         url = '/api/rekap/harian?' + params;
-        exportQuery = `tanggal=${tanggal}` + (unit ? `&unit_id=${unit}` : '');
+        exportQuery = `tipe=harian&tanggal=${tanggal}` + (unit ? `&unit_id=${unit}` : '');
     } else {
         const bulan = document.getElementById('input-bulan').value;
         params.append('bulan', bulan);
         url = '/api/rekap/bulanan?' + params;
-        exportQuery = `bulan=${bulan}` + (unit ? `&unit_id=${unit}` : '');
+        exportQuery = `tipe=bulanan&bulan=${bulan}` + (unit ? `&unit_id=${unit}` : '');
     }
 
     document.getElementById('btn-pdf').href   = `/api/rekap/export-pdf?${exportQuery}`;
@@ -187,7 +191,7 @@ async function loadRekap() {
             ? list.map(r => `
                 <tr class="hover:bg-soft/50 transition">
                     <td class="py-2.5 pr-4 text-text font-medium">${r.nama_lengkap ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-muted text-xs">${r.unit_kerja ?? '-'}</td>
+                    <td class="py-2.5 pr-4 text-muted text-xs">${r.nama_unit ?? '-'}</td>
                     <td class="py-2.5 pr-4 text-text">${r.jam_keluar ?? '-'}</td>
                     <td class="py-2.5 pr-4 text-text">${r.jam_kembali ?? '—'}</td>
                     <td class="py-2.5 pr-4 text-muted">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
@@ -202,9 +206,9 @@ async function loadRekap() {
             : list.map(r => `
                 <tr class="hover:bg-soft/50 transition">
                     <td class="py-2.5 pr-4 text-text font-medium">${r.nama_lengkap ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-muted text-xs">${r.unit_kerja ?? '-'}</td>
-                    <td class="py-2.5 pr-4 text-text">${r.hari_keluar ?? 0} hari</td>
-                    <td class="py-2.5 pr-4 text-text">${r.total_menit ?? 0} mnt</td>
+                    <td class="py-2.5 pr-4 text-muted text-xs">${r.nama_unit ?? '-'}</td>
+                    <td class="py-2.5 pr-4 text-text">${r.jumlah_hari_keluar ?? 0} hari</td>
+                    <td class="py-2.5 pr-4 text-text">${r.total_menit_keluar ?? 0} mnt</td>
                     <td class="py-2.5">
                         ${r.belum_kembali > 0
                             ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-100 text-danger border-red-200">${r.belum_kembali}x</span>`

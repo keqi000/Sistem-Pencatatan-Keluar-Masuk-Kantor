@@ -18,7 +18,7 @@ class RekapController extends Controller
     {
         $user = $request->user();
         $tanggal = $request->query('tanggal', today()->toDateString());
-        $unitKerjaId = (int)$request->query('unit_kerja_id', 0);
+        $unitKerjaId = (int)($request->query('unit_id') ?? $request->query('unit_kerja_id', 0));
 
         if ($user && $user->role === 'pimpinan' && $user->pegawai?->unit_kerja_id) {
             $unitKerjaId = (int)$user->pegawai->unit_kerja_id;
@@ -83,7 +83,7 @@ class RekapController extends Controller
     {
         $user = $request->user();
         $bulan = $request->query('bulan', now()->format('Y-m'));
-        $unitKerjaId = (int)$request->query('unit_kerja_id', 0);
+        $unitKerjaId = (int)($request->query('unit_id') ?? $request->query('unit_kerja_id', 0));
 
         if ($user && $user->role === 'pimpinan' && $user->pegawai?->unit_kerja_id) {
             $unitKerjaId = (int)$user->pegawai->unit_kerja_id;
@@ -140,16 +140,22 @@ class RekapController extends Controller
         $tipe = $request->query('tipe', 'harian');
         $tanggal = $request->query('tanggal', today()->toDateString());
         $bulan = $request->query('bulan', now()->format('Y-m'));
+        $unitKerjaId = (int)($request->query('unit_id') ?? $request->query('unit_kerja_id', 0));
+
+        $user = $request->user();
+        if ($user && $user->role === 'pimpinan' && $user->pegawai?->unit_kerja_id) {
+            $unitKerjaId = (int)$user->pegawai->unit_kerja_id;
+        }
 
         $namaInstansi = Pengaturan::get('nama_instansi', 'Balai Penjaminan Mutu Pendidikan (BPMP) Provinsi Gorontalo');
         $kementerian = Pengaturan::get('kementerian', 'Kementerian Pendidikan Dasar dan Menengah');
         $alamatInstansi = Pengaturan::get('alamat_instansi', 'Jl. Kasmat Lahay, Gorontalo');
 
-        // Render clean HTML printable document
         return response()->view('export_rekap', [
             'tipe'           => $tipe,
             'tanggal'        => $tanggal,
             'bulan'          => $bulan,
+            'unitKerjaId'    => $unitKerjaId,
             'namaInstansi'   => $namaInstansi,
             'kementerian'    => $kementerian,
             'alamatInstansi' => $alamatInstansi,

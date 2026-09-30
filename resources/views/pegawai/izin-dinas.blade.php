@@ -2,90 +2,104 @@
 
 @section('title', 'Izin Dinas')
 
+@push('styles')
+<style>
+    .form-input {
+        width: 100%; padding: 9px 14px;
+        border-radius: 10px; border: 1.5px solid #dbeeff;
+        background: #f8fbff; color: #0a2e5c;
+        font-size: 13px; outline: none;
+        transition: all 0.15s; font-family: inherit;
+        box-sizing: border-box;
+    }
+    .form-input:focus {
+        border-color: #5cc2f2;
+        box-shadow: 0 0 0 3px rgba(92,194,242,0.15);
+        background: #ffffff;
+    }
+    .form-label {
+        font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.08em; color: #0a2e5c;
+    }
+    .tab-btn { padding: 6px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+    .tab-btn.active { background: linear-gradient(135deg,#0073e6,#0056b3); color: white; box-shadow: 0 2px 8px rgba(0,115,230,0.25); }
+    .tab-btn.inactive { background: transparent; color: #64748b; }
+    .tab-btn.inactive:hover { background: #f0f7ff; color: #0a2e5c; }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover { background: #f8fbff; }
+</style>
+@endpush
+
 @section('content')
-<div class="flex flex-col gap-6">
+<div style="display:flex;flex-direction:column;gap:20px;">
 
     {{-- Form Pengajuan --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-6">
-        <h2 class="text-primary font-bold text-base mb-5">Ajukan Izin Dinas</h2>
-
-        <form id="form-izin" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-primary">Tanggal</label>
-                <input type="date" name="tanggal" id="input-tanggal" required
-                    class="px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+    <div style="background:#ffffff;border-radius:20px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 4px 20px rgba(10,46,92,0.06);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f7ff;display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0a2e5c,#0073e6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
+            <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Ajukan Izin Dinas</p>
+        </div>
 
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-primary">Tujuan</label>
-                <input type="text" name="tujuan" placeholder="Nama tempat / instansi tujuan" required
-                    class="px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition
-                           placeholder:text-muted/50">
+        <form id="form-izin" style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label class="form-label">Tanggal</label>
+                <input type="date" name="tanggal" id="input-tanggal" required class="form-input">
             </div>
-
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-primary">Perkiraan Jam Pergi</label>
-                <input type="time" name="perkiraan_jam_pergi" required
-                    class="px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label class="form-label">Tujuan</label>
+                <input type="text" name="tujuan" placeholder="Nama tempat / instansi tujuan" required class="form-input">
             </div>
-
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-primary">Perkiraan Jam Kembali</label>
-                <input type="time" name="perkiraan_jam_kembali" required
-                    class="px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label class="form-label">Perkiraan Jam Pergi</label>
+                <input type="time" name="perkiraan_jam_pergi" required class="form-input">
             </div>
-
-            <div class="flex flex-col gap-1.5 sm:col-span-2">
-                <label class="text-sm font-semibold text-primary">Keperluan</label>
-                <textarea name="keperluan" rows="3" placeholder="Jelaskan keperluan dinas..." required
-                    class="px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition
-                           placeholder:text-muted/50 resize-none"></textarea>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label class="form-label">Perkiraan Jam Kembali</label>
+                <input type="time" name="perkiraan_jam_kembali" required class="form-input">
             </div>
-
-            <div class="sm:col-span-2 flex items-center gap-3">
-                <button type="submit"
-                    class="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-lg
-                           hover:bg-blue-700 transition shadow shadow-brand/30 cursor-pointer">
+            <div style="display:flex;flex-direction:column;gap:5px;grid-column:1/-1;">
+                <label class="form-label">Keperluan</label>
+                <textarea name="keperluan" rows="3" placeholder="Jelaskan keperluan dinas..." required class="form-input" style="resize:none;"></textarea>
+            </div>
+            <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;">
+                <button type="submit" style="padding:9px 22px;border-radius:10px;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,115,230,0.25);transition:all 0.15s;"
+                    onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
                     Ajukan Izin
                 </button>
-                <span id="form-msg" class="text-sm hidden"></span>
+                <span id="form-msg" style="display:none;font-size:13px;"></span>
             </div>
         </form>
     </div>
 
     {{-- Daftar Izin --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-6">
-        <h2 class="text-primary font-bold text-base mb-4">Riwayat Pengajuan</h2>
-
-        {{-- Tab --}}
-        <div class="flex gap-1 mb-5 bg-soft rounded-lg p-1 w-fit">
-            @foreach(['semua' => 'Semua', 'menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'] as $val => $label)
-            <button onclick="filterIzin('{{ $val }}')" data-tab="{{ $val }}"
-                class="tab-btn px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer
-                       {{ $val === 'semua' ? 'bg-canvas text-primary shadow-sm' : 'text-muted hover:text-primary' }}">
-                {{ $label }}
-            </button>
-            @endforeach
+    <div style="background:#ffffff;border-radius:20px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 4px 20px rgba(10,46,92,0.06);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f7ff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Riwayat Pengajuan</p>
+            <div style="display:flex;gap:3px;background:#f8fbff;border-radius:9px;border:1px solid #dbeeff;padding:3px;">
+                @foreach(['semua' => 'Semua', 'menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'] as $val => $label)
+                <button onclick="filterIzin('{{ $val }}')" data-tab="{{ $val }}"
+                    class="tab-btn {{ $val === 'semua' ? 'active' : 'inactive' }}">
+                    {{ $label }}
+                </button>
+                @endforeach
+            </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
                 <thead>
-                    <tr class="border-b border-soft text-muted text-left">
-                        <th class="pb-2 font-semibold">Tanggal</th>
-                        <th class="pb-2 font-semibold">Tujuan</th>
-                        <th class="pb-2 font-semibold">Jam</th>
-                        <th class="pb-2 font-semibold">Status</th>
-                        <th class="pb-2 font-semibold">Catatan Atasan</th>
+                    <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Tanggal</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Tujuan</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Catatan Atasan</th>
                     </tr>
                 </thead>
-                <tbody id="izin-tbody" class="divide-y divide-soft">
-                    <tr><td colspan="5" class="py-6 text-center text-muted">Memuat data...</td></tr>
+                <tbody id="izin-tbody">
+                    <tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -93,10 +107,7 @@
 
 </div>
 
-{{-- Toast --}}
-<div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
-    px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium min-w-[240px] text-center">
-</div>
+<div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;padding:12px 24px;border-radius:12px;color:white;font-size:13px;font-weight:600;min-width:220px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.15);"></div>
 @endsection
 
 @push('scripts')
@@ -106,10 +117,7 @@ const headers = {
     'Accept': 'application/json',
     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
 };
-
 let allIzin = [];
-
-// Set min date = hari ini
 document.getElementById('input-tanggal').min = new Date().toISOString().split('T')[0];
 
 async function loadIzin() {
@@ -119,80 +127,66 @@ async function loadIzin() {
         allIzin = data ?? [];
         renderIzin(allIzin);
     } catch (_) {
-        document.getElementById('izin-tbody').innerHTML =
-            `<tr><td colspan="5" class="py-6 text-center text-muted">Gagal memuat data</td></tr>`;
+        document.getElementById('izin-tbody').innerHTML = `<tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;">Gagal memuat data</td></tr>`;
     }
 }
 
 function renderIzin(data) {
     const tbody = document.getElementById('izin-tbody');
+    const td = 'padding:11px 16px;font-size:13px;border-bottom:1px solid #f0f7ff;';
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-muted">Belum ada pengajuan</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Belum ada pengajuan</td></tr>`;
         return;
     }
-
-    const badgeClass = {
-        menunggu:  'bg-orange-100 text-warning border-orange-200',
-        disetujui: 'bg-green-100 text-success border-green-200',
-        ditolak:   'bg-red-100 text-danger border-red-200',
+    const badge = {
+        menunggu:  { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Menunggu' },
+        disetujui: { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Disetujui' },
+        ditolak:   { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Ditolak' },
     };
-
-    tbody.innerHTML = data.map(d => `
-        <tr class="hover:bg-soft/50 transition">
-            <td class="py-2.5 pr-4 text-text">${d.tanggal}</td>
-            <td class="py-2.5 pr-4 text-text">${d.tujuan}</td>
-            <td class="py-2.5 pr-4 text-muted text-xs">${d.perkiraan_jam_pergi} — ${d.perkiraan_jam_kembali}</td>
-            <td class="py-2.5 pr-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeClass[d.status] ?? 'bg-soft text-brand border-sky/40'}">
-                    ${d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+    tbody.innerHTML = data.map(d => {
+        const b = badge[d.status] ?? { bg:'#dbeeff', color:'#0073e6', border:'#bfdfff', label: d.status };
+        return `<tr>
+            <td style="${td}color:#0a2e5c;font-weight:600;">${d.tanggal}</td>
+            <td style="${td}color:#0a2e5c;">${d.tujuan}</td>
+            <td style="${td}color:#64748b;font-size:12px;">${d.perkiraan_jam_pergi} — ${d.perkiraan_jam_kembali}</td>
+            <td style="${td}">
+                <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${b.bg};color:${b.color};border:1px solid ${b.border};">
+                    ${b.label}
                 </span>
             </td>
-            <td class="py-2.5 text-muted text-xs">${d.catatan_atasan ?? '-'}</td>
-        </tr>
-    `).join('');
+            <td style="${td}color:#64748b;font-size:12px;">${d.catatan_atasan ?? '—'}</td>
+        </tr>`;
+    }).join('');
 }
 
 function filterIzin(status) {
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        const isActive = btn.dataset.tab === status;
-        btn.className = btn.className.replace(
-            isActive ? 'text-muted hover:text-primary' : 'bg-canvas text-primary shadow-sm',
-            isActive ? 'bg-canvas text-primary shadow-sm' : 'text-muted hover:text-primary'
-        );
+        btn.className = 'tab-btn ' + (btn.dataset.tab === status ? 'active' : 'inactive');
     });
     renderIzin(status === 'semua' ? allIzin : allIzin.filter(d => d.status === status));
 }
 
 document.getElementById('form-izin').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = document.getElementById('form-msg');
-    const form = e.target;
-    const payload = Object.fromEntries(new FormData(form));
-
+    const payload = Object.fromEntries(new FormData(e.target));
     try {
-        const res = await fetch('/api/izin-dinas', {
-            method: 'POST', headers, body: JSON.stringify(payload),
-        });
+        const res = await fetch('/api/izin-dinas', { method:'POST', headers, body: JSON.stringify(payload) });
         const json = await res.json();
         if (res.ok) {
             showToast('Izin berhasil diajukan!', 'success');
-            form.reset();
+            e.target.reset();
             document.getElementById('input-tanggal').min = new Date().toISOString().split('T')[0];
             loadIzin();
-        } else {
-            showToast(json.message ?? 'Gagal mengajukan izin', 'danger');
-        }
-    } catch (_) {
-        showToast('Gagal terhubung ke server', 'danger');
-    }
+        } else { showToast(json.message ?? 'Gagal mengajukan izin', 'danger'); }
+    } catch (_) { showToast('Gagal terhubung ke server', 'danger'); }
 });
 
 function showToast(msg, type) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.remove('hidden', 'bg-success', 'bg-danger');
-    toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'success' ? 'linear-gradient(135deg,#16a34a,#15803d)' : 'linear-gradient(135deg,#dc2626,#b91c1c)';
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
 }
 
 loadIzin();

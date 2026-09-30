@@ -4,10 +4,14 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Pegawai;
 use App\Models\UnitKerja;
 use App\Models\Pengaturan;
+use App\Models\IzinDinas;
+use App\Models\Pindaian;
+use App\Models\PasanganKeluarMasuk;
 
 class DatabaseSeeder extends Seeder
 {
@@ -154,6 +158,230 @@ class DatabaseSeeder extends Seeder
         $userPimpinan = User::where('username', 'pimpinan')->first();
         if ($userPimpinan) {
             UnitKerja::query()->update(['pimpinan_id' => $userPimpinan->id]);
+        }
+
+        // Tambah pegawai ekstra agar tampilan lebih penuh
+        $pegawaiEkstra = [
+            ['199301012018011001', 'Hendra Monoarfa, S.E.',       'Bendahara Pengeluaran',          $u1->id, $p2->id, '081234567806'],
+            ['199405152019022002', 'Nurhayati Pakaya, S.Pd.',     'Analis Kepegawaian',              $u1->id, $p2->id, '081234567807'],
+            ['198807102012031003', 'Irwan Dunggio, M.Pd.',        'Widyaprada Ahli Muda',            $u2->id, $p2->id, '081234567808'],
+            ['199106202016042004', 'Rini Hulopi, S.Pd.',          'Widyaprada Ahli Pertama',         $u2->id, $p2->id, '081234567809'],
+            ['198912112014031005', 'Faisal Usman, S.T.',          'Analis Data & Informasi',         $u3->id, $p2->id, '081234567810'],
+            ['199507082020022006', 'Dewi Nento, S.Pd.',           'Pengembang Teknologi Pembelajaran',$u3->id, $p2->id, '081234567811'],
+            ['198604252011011007', 'Yusuf Liputo, S.Sos.',        'Analis Kebijakan Ahli Pertama',   $u4->id, $p2->id, '081234567812'],
+            ['199208302017042008', 'Maryam Daud, S.AP.',          'Pengadministrasi Umum',           $u4->id, $p2->id, '081234567813'],
+        ];
+
+        $pEkstra = [];
+        foreach ($pegawaiEkstra as $pe) {
+            $pEkstra[] = Pegawai::updateOrCreate(['nip' => $pe[0]], [
+                'nama_lengkap'  => $pe[1],
+                'jabatan'       => $pe[2],
+                'unit_kerja_id' => $pe[3],
+                'atasan_id'     => $pe[4],
+                'nomor_hp'      => $pe[5],
+                'status'        => 'aktif',
+            ]);
+        }
+
+        // Tambah user pegawai ekstra
+        foreach ($pEkstra as $i => $pe) {
+            User::updateOrCreate(['username' => 'pegawai' . ($i + 3)], [
+                'password'   => $defaultPassword,
+                'full_name'  => $pe->nama_lengkap,
+                'role'       => 'pegawai',
+                'status'     => 'aktif',
+                'pegawai_id' => $pe->id,
+            ]);
+        }
+
+        // Semua pegawai aktif (untuk seed pindaian)
+        $semuaPegawai = Pegawai::where('status', 'aktif')->get();
+        $userAtasan   = User::where('username', 'atasan')->first();
+        $today        = now()->toDateString();
+        $yesterday    = now()->subDay()->toDateString();
+
+        // ── IZIN DINAS ──────────────────────────────────────────────────────────
+        $izinData = [
+            // hari ini - disetujui
+            [$p3->id, $userAtasan->id, $today,     '08:00', '12:00', 'Dinas Pendidikan Kota Gorontalo',  'Koordinasi program PKB guru SD',          'disetujui', null],
+            [$p4->id, $userAtasan->id, $today,     '09:00', '14:00', 'LPMP Sulawesi Utara',              'Rapat sinkronisasi data PMP',             'disetujui', null],
+            // hari ini - menunggu
+            [$pEkstra[2]->id, $userAtasan->id, $today, '10:00', '15:00', 'Dinas Pendidikan Provinsi', 'Pembahasan kurikulum merdeka belajar',    'menunggu',  null],
+            [$pEkstra[4]->id, $userAtasan->id, $today, '08:30', '11:30', 'BPS Provinsi Gorontalo',    'Pengambilan data statistik pendidikan',   'menunggu',  null],
+            // kemarin - disetujui
+            [$p5->id,         $userAtasan->id, $yesterday, '08:00', '16:00', 'BPKP Perwakilan Gorontalo', 'Konsultasi laporan keuangan semester I', 'disetujui', 'Disetujui, harap bawa dokumen lengkap.'],
+            [$pEkstra[0]->id, $userAtasan->id, $yesterday, '09:00', '13:00', 'Bank BRI Cabang Gorontalo', 'Pencairan anggaran operasional',         'disetujui', null],
+            // kemarin - ditolak
+            [$pEkstra[1]->id, $userAtasan->id, $yesterday, '08:00', '17:00', 'Jakarta',                   'Menghadiri seminar nasional',            'ditolak',   'Tidak ada anggaran perjalanan dinas ke luar daerah bulan ini.'],
+            // masa depan - menunggu
+            [$p3->id, $userAtasan->id, now()->addDays(2)->toDateString(), '08:00', '16:00', 'Universitas Negeri Gorontalo', 'Workshop pengembangan modul ajar', 'menunggu', null],
+            [$pEkstra[5]->id, $userAtasan->id, now()->addDays(3)->toDateString(), '09:00', '15:00', 'Dinas Pendidikan Bone Bolango', 'Monitoring implementasi Kurikulum Merdeka', 'menunggu', null],
+        ];
+
+        $izinRecords = [];
+        foreach ($izinData as $iz) {
+            $izinRecords[] = IzinDinas::updateOrCreate(
+                ['pegawai_id' => $iz[0], 'tanggal' => $iz[2], 'tujuan' => $iz[5]],
+                [
+                    'atasan_id'             => $iz[1],
+                    'perkiraan_jam_pergi'   => $iz[3],
+                    'perkiraan_jam_kembali' => $iz[4],
+                    'keperluan'             => $iz[6],
+                    'status'                => $iz[7],
+                    'catatan_atasan'        => $iz[8],
+                ]
+            );
+        }
+
+        // ── PINDAIAN & PASANGAN HARI INI ────────────────────────────────────────
+        // Hapus data hari ini dulu agar tidak duplikat saat re-seed
+        DB::table('pindaian')->whereDate('jam', $today)->delete();
+        DB::table('pasangan_keluar_masuk')->whereDate('jam_keluar', $today)->delete();
+
+        $skenario = [
+            // [pegawai, jam_keluar, jam_kembali|null, keperluan_jenis, izin_index|null]
+            [$p3,           '07:45', '10:30', 'dinas',        0],  // sudah kembali, pakai izin[0]
+            [$p4,           '08:15', null,    'dinas',        1],  // masih di luar, pakai izin[1]
+            [$p5,           '08:30', '09:45', 'keperluan_lain', null], // sudah kembali
+            [$pEkstra[0],   '09:00', '11:15', 'keperluan_lain', null], // sudah kembali
+            [$pEkstra[1],   '09:30', null,    'keperluan_lain', null], // masih di luar
+            [$pEkstra[2],   '10:00', null,    'dinas',        2],  // masih di luar, izin menunggu
+            [$pEkstra[3],   '10:20', '13:00', 'keperluan_lain', null], // sudah kembali
+            [$pEkstra[4],   '11:00', null,    'dinas',        3],  // masih di luar, izin menunggu
+            [$pEkstra[6],   '07:50', '08:30', 'keperluan_lain', null], // sudah kembali cepat
+            [$pEkstra[7],   '13:00', null,    'keperluan_lain', null], // masih di luar (siang)
+        ];
+
+        foreach ($skenario as $s) {
+            [$pegawai, $jamKeluar, $jamKembali, $keperluanJenis, $izinIdx] = $s;
+
+            $izinId    = ($izinIdx !== null && isset($izinRecords[$izinIdx])) ? $izinRecords[$izinIdx]->id : null;
+            $dtKeluar  = now()->setTimeFromTimeString($jamKeluar);
+
+            // Buat pindaian keluar
+            $pindaianKeluar = Pindaian::create([
+                'pegawai_id'     => $pegawai->id,
+                'jenis'          => 'keluar',
+                'jam'            => $dtKeluar,
+                'tempat'         => 'lobby',
+                'keperluan_jenis'=> $keperluanJenis,
+                'izin_dinas_id'  => $izinId,
+                'pasangan_id'    => null,
+            ]);
+
+            if ($jamKembali) {
+                $dtKembali    = now()->setTimeFromTimeString($jamKembali);
+                $durasiMenit  = (int) $dtKeluar->diffInMinutes($dtKembali);
+
+                // Buat pindaian masuk
+                $pindaianMasuk = Pindaian::create([
+                    'pegawai_id'     => $pegawai->id,
+                    'jenis'          => 'masuk',
+                    'jam'            => $dtKembali,
+                    'tempat'         => 'pos',
+                    'keperluan_jenis'=> null,
+                    'izin_dinas_id'  => null,
+                    'pasangan_id'    => null,
+                ]);
+
+                // Buat pasangan
+                $pasangan = PasanganKeluarMasuk::create([
+                    'pegawai_id'        => $pegawai->id,
+                    'pindaian_keluar_id'=> $pindaianKeluar->id,
+                    'jam_keluar'        => $dtKeluar,
+                    'pindaian_masuk_id' => $pindaianMasuk->id,
+                    'jam_kembali'       => $dtKembali,
+                    'durasi_menit'      => $durasiMenit,
+                    'status'            => 'kembali',
+                ]);
+
+                // Update pasangan_id di kedua pindaian
+                $pindaianKeluar->update(['pasangan_id' => $pasangan->id]);
+                $pindaianMasuk->update(['pasangan_id'  => $pasangan->id]);
+            } else {
+                // Masih di luar — buat pasangan terbuka
+                $pasangan = PasanganKeluarMasuk::create([
+                    'pegawai_id'        => $pegawai->id,
+                    'pindaian_keluar_id'=> $pindaianKeluar->id,
+                    'jam_keluar'        => $dtKeluar,
+                    'pindaian_masuk_id' => null,
+                    'jam_kembali'       => null,
+                    'durasi_menit'      => null,
+                    'status'            => 'terbuka',
+                ]);
+
+                $pindaianKeluar->update(['pasangan_id' => $pasangan->id]);
+            }
+        }
+
+        // ── PINDAIAN KEMARIN (untuk rekap) ──────────────────────────────────────
+        DB::table('pindaian')->whereDate('jam', $yesterday)->delete();
+        DB::table('pasangan_keluar_masuk')->whereDate('jam_keluar', $yesterday)->delete();
+
+        $skenariosKemarin = [
+            [$p3,         '08:00', '12:30', 'dinas',         null],
+            [$p4,         '09:15', '14:00', 'dinas',         null],
+            [$p5,         '08:45', '10:00', 'keperluan_lain',null],
+            [$pEkstra[0], '10:00', '15:30', 'keperluan_lain',null],
+            [$pEkstra[2], '08:30', '11:00', 'dinas',         null],
+            [$pEkstra[5], '13:00', null,    'keperluan_lain',null], // belum kembali kemarin
+        ];
+
+        foreach ($skenariosKemarin as $s) {
+            [$pegawai, $jamKeluar, $jamKembali, $keperluanJenis, $izinId] = $s;
+
+            $dtKeluar = now()->subDay()->setTimeFromTimeString($jamKeluar);
+
+            $pindaianKeluar = Pindaian::create([
+                'pegawai_id'     => $pegawai->id,
+                'jenis'          => 'keluar',
+                'jam'            => $dtKeluar,
+                'tempat'         => 'lobby',
+                'keperluan_jenis'=> $keperluanJenis,
+                'izin_dinas_id'  => $izinId,
+                'pasangan_id'    => null,
+            ]);
+
+            if ($jamKembali) {
+                $dtKembali   = now()->subDay()->setTimeFromTimeString($jamKembali);
+                $durasiMenit = (int) $dtKeluar->diffInMinutes($dtKembali);
+
+                $pindaianMasuk = Pindaian::create([
+                    'pegawai_id'     => $pegawai->id,
+                    'jenis'          => 'masuk',
+                    'jam'            => $dtKembali,
+                    'tempat'         => 'pos',
+                    'keperluan_jenis'=> null,
+                    'izin_dinas_id'  => null,
+                    'pasangan_id'    => null,
+                ]);
+
+                $pasangan = PasanganKeluarMasuk::create([
+                    'pegawai_id'        => $pegawai->id,
+                    'pindaian_keluar_id'=> $pindaianKeluar->id,
+                    'jam_keluar'        => $dtKeluar,
+                    'pindaian_masuk_id' => $pindaianMasuk->id,
+                    'jam_kembali'       => $dtKembali,
+                    'durasi_menit'      => $durasiMenit,
+                    'status'            => 'kembali',
+                ]);
+
+                $pindaianKeluar->update(['pasangan_id' => $pasangan->id]);
+                $pindaianMasuk->update(['pasangan_id'  => $pasangan->id]);
+            } else {
+                $pasangan = PasanganKeluarMasuk::create([
+                    'pegawai_id'        => $pegawai->id,
+                    'pindaian_keluar_id'=> $pindaianKeluar->id,
+                    'jam_keluar'        => $dtKeluar,
+                    'pindaian_masuk_id' => null,
+                    'jam_kembali'       => null,
+                    'durasi_menit'      => null,
+                    'status'            => 'belum_kembali',
+                ]);
+
+                $pindaianKeluar->update(['pasangan_id' => $pasangan->id]);
+            }
         }
     }
 }

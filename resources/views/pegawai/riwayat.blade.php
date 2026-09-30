@@ -2,82 +2,89 @@
 
 @section('title', 'Riwayat Saya')
 
+@push('styles')
+<style>
+    .filter-input {
+        padding: 8px 12px; border-radius: 10px;
+        border: 1.5px solid #dbeeff; background: #f8fbff;
+        color: #0a2e5c; font-size: 13px; outline: none;
+        transition: all 0.15s; font-family: inherit;
+    }
+    .filter-input:focus {
+        border-color: #5cc2f2;
+        box-shadow: 0 0 0 3px rgba(92,194,242,0.15);
+        background: #ffffff;
+    }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover { background: #f8fbff; }
+</style>
+@endpush
+
 @section('content')
-<div class="flex flex-col gap-6">
+<div style="display:flex;flex-direction:column;gap:20px;">
 
     {{-- Filter --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-5">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold text-primary">Dari Tanggal</label>
-                <input type="date" id="filter-dari"
-                    class="px-3 py-2 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+    <div style="background:#ffffff;border-radius:20px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 4px 20px rgba(10,46,92,0.06);padding:18px 20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Dari Tanggal</label>
+                <input type="date" id="filter-dari" class="filter-input">
             </div>
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold text-primary">Sampai Tanggal</label>
-                <input type="date" id="filter-sampai"
-                    class="px-3 py-2 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Sampai Tanggal</label>
+                <input type="date" id="filter-sampai" class="filter-input">
             </div>
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold text-primary">Keperluan</label>
-                <select id="filter-keperluan"
-                    class="px-3 py-2 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Keperluan</label>
+                <select id="filter-keperluan" class="filter-input">
                     <option value="">Semua</option>
                     <option value="dinas">Dinas</option>
                     <option value="keperluan_lain">Keperluan Lain</option>
                 </select>
             </div>
-            <button onclick="loadRiwayat(1)"
-                class="px-5 py-2 bg-brand text-white text-sm font-semibold rounded-lg
-                       hover:bg-blue-700 transition shadow shadow-brand/30 cursor-pointer">
+            <button onclick="loadRiwayat(1)" style="padding:8px 20px;border-radius:10px;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,115,230,0.25);transition:all 0.15s;"
+                onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
                 Cari
             </button>
-            <button onclick="resetFilter()"
-                class="px-4 py-2 bg-soft text-muted text-sm rounded-lg hover:bg-sky/20 transition cursor-pointer">
+            <button onclick="resetFilter()" style="padding:8px 16px;border-radius:10px;background:#f8fbff;border:1.5px solid #dbeeff;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;"
+                onmouseover="this.style.background='#dbeeff'" onmouseout="this.style.background='#f8fbff'">
                 Reset
             </button>
         </div>
     </div>
 
     {{-- Tabel --}}
-    <div class="bg-canvas rounded-2xl shadow-sm border border-soft p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-primary font-bold text-base">Riwayat Aktivitas</h2>
-            <span id="total-info" class="text-muted text-xs"></span>
+    <div style="background:#ffffff;border-radius:20px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 4px 20px rgba(10,46,92,0.06);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f7ff;display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Riwayat Aktivitas</p>
+            <span id="total-info" style="font-size:12px;font-weight:600;color:#0073e6;padding:3px 12px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);display:none;"></span>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
                 <thead>
-                    <tr class="border-b border-soft text-muted text-left">
-                        <th class="pb-2 font-semibold">Tanggal</th>
-                        <th class="pb-2 font-semibold">Jam Keluar</th>
-                        <th class="pb-2 font-semibold">Jam Kembali</th>
-                        <th class="pb-2 font-semibold">Durasi</th>
-                        <th class="pb-2 font-semibold">Keperluan</th>
-                        <th class="pb-2 font-semibold">Status</th>
+                    <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Tanggal</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Keluar</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Kembali</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Durasi</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Keperluan</th>
+                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
                     </tr>
                 </thead>
-                <tbody id="riwayat-tbody" class="divide-y divide-soft">
-                    <tr><td colspan="6" class="py-6 text-center text-muted">Memuat data...</td></tr>
+                <tbody id="riwayat-tbody">
+                    <tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
 
         {{-- Pagination --}}
-        <div id="pagination" class="flex items-center justify-between mt-5 pt-4 border-t border-soft hidden">
-            <button id="btn-prev" onclick="changePage(-1)"
-                class="px-4 py-1.5 text-sm rounded-lg border border-sky/40 text-muted hover:bg-soft transition cursor-pointer disabled:opacity-40">
-                ← Sebelumnya
-            </button>
-            <span id="page-info" class="text-muted text-xs"></span>
-            <button id="btn-next" onclick="changePage(1)"
-                class="px-4 py-1.5 text-sm rounded-lg border border-sky/40 text-muted hover:bg-soft transition cursor-pointer disabled:opacity-40">
-                Berikutnya →
-            </button>
+        <div id="pagination" style="display:none;padding:14px 20px;border-top:1px solid #f0f7ff;display:flex;align-items:center;justify-content:space-between;">
+            <button id="btn-prev" onclick="changePage(-1)" style="padding:6px 16px;border-radius:9px;border:1.5px solid #dbeeff;background:#f8fbff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;"
+                onmouseover="this.style.background='#dbeeff'" onmouseout="this.style.background='#f8fbff'">← Sebelumnya</button>
+            <span id="page-info" style="font-size:12px;color:#64748b;"></span>
+            <button id="btn-next" onclick="changePage(1)" style="padding:6px 16px;border-radius:9px;border:1.5px solid #dbeeff;background:#f8fbff;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;"
+                onmouseover="this.style.background='#dbeeff'" onmouseout="this.style.background='#f8fbff'">Berikutnya →</button>
         </div>
     </div>
 
@@ -90,68 +97,76 @@ const headers = {
     'Accept': 'application/json',
     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
 };
-
-let currentPage = 1;
-let lastMeta = null;
+let currentPage = 1, lastMeta = null;
 
 async function loadRiwayat(page = 1) {
     currentPage = page;
-    const dari     = document.getElementById('filter-dari').value;
-    const sampai   = document.getElementById('filter-sampai').value;
-    const keperluan = document.getElementById('filter-keperluan').value;
-
     const params = new URLSearchParams({ page, per_page: 15 });
-    if (dari)      params.append('dari', dari);
-    if (sampai)    params.append('sampai', sampai);
+    const dari = document.getElementById('filter-dari').value;
+    const sampai = document.getElementById('filter-sampai').value;
+    const keperluan = document.getElementById('filter-keperluan').value;
+    if (dari) params.append('start_date', dari);
+    if (sampai) params.append('end_date', sampai);
     if (keperluan) params.append('keperluan_jenis', keperluan);
 
     const tbody = document.getElementById('riwayat-tbody');
-    tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Memuat...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Memuat...</td></tr>`;
 
     try {
-        const res = await fetch('/api/riwayat?' + params, { headers });
+        const res = await fetch('/api/riwayat/saya?' + params, { headers });
         const json = await res.json();
         const data = json.data ?? [];
-        lastMeta = json.meta ?? null;
+        const totalPage = json.total_page ?? 1;
+        const currentPageRes = json.page ?? 1;
+        const total = json.total ?? 0;
+
+        const totalInfo = document.getElementById('total-info');
+        const pagination = document.getElementById('pagination');
 
         if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Tidak ada data</td></tr>`;
-            document.getElementById('pagination').classList.add('hidden');
-            document.getElementById('total-info').textContent = '';
+            tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Tidak ada data</td></tr>`;
+            totalInfo.style.display = 'none';
+            pagination.style.display = 'none';
             return;
         }
 
-        const statusClass = {
-            terbuka:       'bg-orange-100 text-warning border-orange-200',
-            kembali:       'bg-green-100 text-success border-green-200',
-            belum_kembali: 'bg-red-100 text-danger border-red-200',
+        const td = 'padding:11px 16px;font-size:13px;border-bottom:1px solid #f0f7ff;';
+        const statusBadge = {
+            terbuka:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
+            kembali:       { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Kembali' },
+            belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
         };
 
-        tbody.innerHTML = data.map(r => `
-            <tr class="hover:bg-soft/50 transition">
-                <td class="py-2.5 pr-4 text-text">${r.tanggal ?? '-'}</td>
-                <td class="py-2.5 pr-4 text-text">${r.jam_keluar ?? '-'}</td>
-                <td class="py-2.5 pr-4 text-text">${r.jam_kembali ?? '<span class="text-muted">—</span>'}</td>
-                <td class="py-2.5 pr-4 text-muted">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
-                <td class="py-2.5 pr-4 text-text capitalize">${r.keperluan_jenis?.replace('_', ' ') ?? '-'}</td>
-                <td class="py-2.5">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border
-                        ${statusClass[r.status] ?? 'bg-soft text-brand border-sky/40'}">
-                        ${r.status?.replace('_', ' ') ?? '-'}
+        tbody.innerHTML = data.map(r => {
+            const s = statusBadge[r.status] ?? { bg:'#dbeeff', color:'#0073e6', border:'#bfdfff', label: r.status ?? '-' };
+            const jamKeluar = r.jam_keluar ? r.jam_keluar.substring(11,19) : '-';
+            const jamKembali = r.jam_kembali ? r.jam_kembali.substring(11,19) : '—';
+            const tanggal = r.jam_keluar ? r.jam_keluar.substring(0,10) : '-';
+            return `<tr>
+                <td style="${td}color:#0a2e5c;font-weight:600;">${tanggal}</td>
+                <td style="${td}color:#0073e6;font-weight:600;">${jamKeluar}</td>
+                <td style="${td}color:#64748b;">${jamKembali}</td>
+                <td style="${td}color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
+                <td style="${td}color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
+                <td style="${td}">
+                    <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
+                        ${s.label}
                     </span>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
 
-        if (lastMeta) {
-            document.getElementById('total-info').textContent = `Total: ${lastMeta.total} data`;
-            document.getElementById('page-info').textContent = `Halaman ${lastMeta.current_page} dari ${lastMeta.last_page}`;
-            document.getElementById('btn-prev').disabled = lastMeta.current_page <= 1;
-            document.getElementById('btn-next').disabled = lastMeta.current_page >= lastMeta.last_page;
-            document.getElementById('pagination').classList.remove('hidden');
+        if (total > 0) {
+            totalInfo.textContent = `${total} data`;
+            totalInfo.style.display = 'inline';
+            document.getElementById('page-info').textContent = `Halaman ${currentPageRes} dari ${totalPage}`;
+            document.getElementById('btn-prev').disabled = currentPageRes <= 1;
+            document.getElementById('btn-next').disabled = currentPageRes >= totalPage;
+            pagination.style.display = 'flex';
+            lastMeta = { current_page: currentPageRes, last_page: totalPage };
         }
     } catch (_) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-muted">Gagal memuat data</td></tr>`;
+        document.getElementById('riwayat-tbody').innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#dc2626;font-size:13px;">Gagal memuat data</td></tr>`;
     }
 }
 

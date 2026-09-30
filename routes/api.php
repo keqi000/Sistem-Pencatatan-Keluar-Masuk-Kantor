@@ -42,10 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/pindaian/{id}', [PindaianController::class, 'destroy'])->middleware('role:admin');
 
     // Izin Dinas
-    Route::get('/izin-dinas/saya', [IzinDinasController::class, 'getListSaya']);
-    Route::post('/izin-dinas/ajukan', [IzinDinasController::class, 'ajukan']);
+    Route::get('/izin-dinas', [IzinDinasController::class, 'getListSaya']);
+    Route::post('/izin-dinas', [IzinDinasController::class, 'ajukan']);
     Route::get('/izin-dinas/bawahan', [IzinDinasController::class, 'getListBawahan'])->middleware('role:atasan,admin,pimpinan');
-    Route::post('/izin-dinas/putuskan', [IzinDinasController::class, 'putuskan'])->middleware('role:atasan,admin,pimpinan');
+    Route::post('/izin-dinas/{id}/putuskan', [IzinDinasController::class, 'putuskan'])->middleware('role:atasan,admin,pimpinan');
     Route::get('/izin-dinas/aktif-hari-ini', [IzinDinasController::class, 'getAktifHariIni']);
 
     // Riwayat

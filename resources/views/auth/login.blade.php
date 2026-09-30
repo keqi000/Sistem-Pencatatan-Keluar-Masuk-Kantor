@@ -5,115 +5,308 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — SIKMA BPMP Gorontalo</title>
     @vite(['resources/css/app.css'])
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f0f7ff;
+            background-image:
+                radial-gradient(ellipse 70% 50% at 10% 20%, rgba(92,194,242,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 90% 80%, rgba(0,115,230,0.1) 0%, transparent 60%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Wrapper utama ── */
+        .login-wrapper {
+            width: 100%;
+            display: flex;
+        }
+
+        /* Semua ukuran: selalu card */
+        body { padding: 20px; }
+
+        .login-wrapper {
+            max-width: 480px;
+            min-height: auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(10,46,92,0.15), 0 0 0 1px rgba(92,194,242,0.2);
+        }
+
+        @media (max-width: 400px) {
+            body { padding: 12px; }
+        }
+
+        /* Desktop: lebih lebar dengan panel kiri */
+        @media (min-width: 1024px) {
+            body { padding: 48px; }
+            .login-wrapper {
+                max-width: 780px;
+                border-radius: 24px;
+            }
+        }
+
+        /* ── Panel Kiri ── */
+        .panel-left {
+            display: none;
+            width: 40%;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 28px 32px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, #0a2e5c 0%, #0d3a73 55%, #0073e6 100%);
+        }
+        @media (min-width: 1024px) {
+            .panel-left { display: flex; }
+        }
+
+        /* ── Panel Kanan ── */
+        .panel-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #ffffff;
+            padding: 28px 24px;
+        }
+        @media (min-width: 1024px) {
+            .panel-right { padding: 28px 36px; }
+        }
+
+        .dot-grid {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(92,194,242,0.25) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            pointer-events: none;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #f8fbff;
+            border: 1.5px solid #dbeeff;
+            color: #0a2e5c;
+            border-radius: 12px;
+            padding: 10px 16px 10px 40px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .input-field::placeholder { color: #94a3b8; }
+        .input-field:focus {
+            outline: none;
+            background: #ffffff;
+            border-color: #5cc2f2;
+            box-shadow: 0 0 0 3px rgba(92,194,242,0.15);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 11px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0073e6 0%, #0056b3 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.03em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(0,115,230,0.3);
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0,115,230,0.4);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        .line-deco {
+            height: 2px;
+            width: 40px;
+            border-radius: 99px;
+            background: linear-gradient(90deg, rgba(92,194,242,0.8), rgba(0,115,230,0.4), transparent);
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-soft flex items-center justify-center p-4">
+<body>
 
-    <div class="w-full max-w-4xl bg-canvas rounded-2xl shadow-2xl overflow-hidden flex min-h-[520px]">
+    <div class="login-wrapper">
 
-        {{-- PANEL KIRI — Branding --}}
-        <div class="hidden md:flex flex-col justify-between w-5/12 p-10"
-             style="background: linear-gradient(160deg, #0a2e5c 0%, #0d3a73 60%, #0073e6 100%);">
+        {{-- ═══ PANEL KIRI ═══ --}}
+        <div class="panel-left">
+            <div class="dot-grid"></div>
 
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP"
-                     class="h-12 w-12 object-contain drop-shadow">
-                <div class="leading-tight">
-                    <p class="text-white font-bold text-sm">BPMP Provinsi</p>
-                    <p class="text-sky font-bold text-sm">Gorontalo</p>
+            {{-- Dekorasi --}}
+            <div class="orb" style="width:280px;height:280px;bottom:-80px;right:-80px;background:radial-gradient(circle,rgba(92,194,242,0.15),transparent 70%);"></div>
+            <div class="orb" style="width:160px;height:160px;top:30%;left:-50px;border:1px solid rgba(92,194,242,0.08);filter:none;background:transparent;"></div>
+
+            {{-- Logo --}}
+            <div style="position:relative;display:flex;align-items:center;gap:12px;">
+                <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);flex-shrink:0;">
+                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" style="width:32px;height:32px;object-fit:contain;">
+                </div>
+                <div>
+                    <p style="color:white;font-weight:700;font-size:13px;">BPMP Provinsi</p>
+                    <p style="color:#5cc2f2;font-weight:600;font-size:13px;">Gorontalo</p>
                 </div>
             </div>
 
-            <div>
-                <h1 class="text-white text-3xl font-bold leading-snug mb-3">
-                    Sistem Informasi<br>Keluar Masuk
-                </h1>
-                <p class="text-white/60 text-sm leading-relaxed">
-                    Pencatatan aktivitas keluar masuk pegawai berbasis QR Code dinamis.
+            {{-- Konten --}}
+            <div style="position:relative;display:flex;flex-direction:column;gap:20px;">
+                <div>
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:11px;font-weight:600;background:rgba(92,194,242,0.15);border:1px solid rgba(92,194,242,0.3);color:#5cc2f2;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#5cc2f2;display:inline-block;"></span>
+                        Sistem Aktif
+                    </span>
+                </div>
+                <div>
+                    <h1 style="color:white;font-weight:800;font-size:1.6rem;line-height:1.2;letter-spacing:-0.02em;margin-bottom:10px;">
+                        Sistem<br>Informasi<br>
+                        <span style="background:linear-gradient(90deg,#5cc2f2,#7dd3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+                            Keluar Masuk
+                        </span>
+                    </h1>
+                    <div class="line-deco"></div>
+                    <p style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.5);">
+                        Pencatatan aktivitas pegawai berbasis
+                        <span style="color:#5cc2f2;">QR Code dinamis</span>
+                        yang berganti otomatis setiap 30 detik.
+                    </p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    @foreach(['QR Code Sesaat (Dynamic)', 'Persetujuan Izin Dinas', 'Dashboard Real-time'] as $f)
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(92,194,242,0.2);border:1px solid rgba(92,194,242,0.35);">
+                            <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#5cc2f2" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <span style="font-size:12px;color:rgba(255,255,255,0.55);">{{ $f }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <p style="position:relative;font-size:11px;color:rgba(255,255,255,0.2);">SIKMA v2.0.0 &copy; {{ date('Y') }}</p>
+        </div>
+
+        {{-- ═══ PANEL KANAN ═══ --}}
+        <div class="panel-right">
+
+            {{-- Mobile header --}}
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;" class="lg:hidden">
+                <div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);flex-shrink:0;">
+                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo" style="width:24px;height:24px;object-fit:contain;">
+                </div>
+                <div>
+                    <p style="color:#0a2e5c;font-weight:700;font-size:13px;">BPMP Provinsi Gorontalo</p>
+                    <p style="color:#64748b;font-size:11px;">SIKMA v2.0.0</p>
+                </div>
+            </div>
+
+            {{-- Heading --}}
+            <div style="margin-bottom:20px;">
+                <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#5cc2f2;margin-bottom:6px;">
+                    Selamat Datang
+                </p>
+                <h2 style="font-size:1.4rem;font-weight:800;color:#0a2e5c;letter-spacing:-0.02em;margin-bottom:4px;">
+                    Masuk ke SIKMA
+                </h2>
+                <p style="font-size:13px;color:#64748b;">
+                    Gunakan akun kepegawaian yang diberikan admin
                 </p>
             </div>
 
-            <p class="text-white/30 text-xs">SIKMA v2.0.0 &copy; {{ date('Y') }}</p>
-        </div>
-
-        {{-- PANEL KANAN — Form Login --}}
-        <div class="flex-1 flex flex-col justify-center px-8 py-10 md:px-12">
-
-            {{-- Mobile header --}}
-            <div class="flex md:hidden items-center gap-3 mb-8">
-                <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" class="h-9 w-9 object-contain">
-                <div class="leading-tight">
-                    <p class="text-primary font-bold text-sm">BPMP Provinsi Gorontalo</p>
-                    <p class="text-muted text-xs">SIKMA v2.0.0</p>
-                </div>
-            </div>
-
-            <h2 class="text-2xl font-bold text-primary mb-1">Selamat Datang</h2>
-            <p class="text-muted text-sm mb-8">Masuk dengan akun kepegawaian Anda</p>
-
             {{-- Error --}}
             @if($errors->any())
-                <div class="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-danger text-sm flex items-start gap-2">
-                    <span class="mt-0.5">⚠</span>
-                    <span>{{ $errors->first() }}</span>
-                </div>
+            <div style="margin-bottom:20px;padding:12px 16px;border-radius:12px;display:flex;align-items:flex-start;gap:10px;font-size:13px;background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;">
+                <span>⚠</span>
+                <span>{{ $errors->first() }}</span>
+            </div>
             @endif
 
-            <form method="POST" action="/login" class="flex flex-col gap-5">
+            <form method="POST" action="/login" style="display:flex;flex-direction:column;gap:12px;">
                 @csrf
 
                 {{-- Username --}}
-                <div class="flex flex-col gap-1.5">
-                    <label for="username" class="text-sm font-semibold text-primary">Username</label>
-                    <input
-                        id="username"
-                        type="text"
-                        name="username"
-                        value="{{ old('username') }}"
-                        required
-                        autofocus
-                        autocomplete="username"
-                        placeholder="Masukkan username"
-                        class="w-full px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                               focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand
-                               placeholder:text-muted/50 transition"
-                    >
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <label for="username" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">
+                        Username
+                    </label>
+                    <div style="position:relative;">
+                        <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#5cc2f2;pointer-events:none;">
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <input id="username" type="text" name="username"
+                               value="{{ old('username') }}"
+                               required autofocus autocomplete="username"
+                               placeholder="Masukkan username"
+                               class="input-field">
+                    </div>
                 </div>
 
                 {{-- Password --}}
-                <div class="flex flex-col gap-1.5">
-                    <label for="password" class="text-sm font-semibold text-primary">Kata Sandi</label>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                        placeholder="Masukkan kata sandi"
-                        class="w-full px-4 py-2.5 rounded-lg border border-sky/40 bg-soft/40 text-text text-sm
-                               focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand
-                               placeholder:text-muted/50 transition"
-                    >
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <label for="password" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">
+                        Kata Sandi
+                    </label>
+                    <div style="position:relative;">
+                        <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#5cc2f2;pointer-events:none;">
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input id="password" type="password" name="password"
+                               required autocomplete="current-password"
+                               placeholder="Masukkan kata sandi"
+                               class="input-field">
+                    </div>
                 </div>
 
                 {{-- Remember --}}
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" name="remember"
-                           class="w-4 h-4 rounded border-sky/40 accent-brand">
-                    <span class="text-sm text-muted">Ingat saya</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+                    <input type="checkbox" name="remember" style="width:15px;height:15px;accent-color:#0073e6;border-radius:4px;">
+                    <span style="font-size:13px;color:#64748b;">Ingat saya</span>
                 </label>
 
-                {{-- Submit --}}
-                <button type="submit"
-                    class="w-full py-2.5 rounded-lg bg-brand text-white font-semibold text-sm
-                           hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md shadow-brand/30 cursor-pointer">
-                    Masuk
-                </button>
+                <button type="submit" class="btn-login">Masuk ke Sistem</button>
             </form>
 
-            <p class="mt-8 text-xs text-muted text-center">
-                Lupa akun? Hubungi <span class="text-brand font-medium">Admin Kepegawaian</span>
+            {{-- Divider --}}
+            <div style="display:flex;align-items:center;gap:12px;margin:14px 0;">
+                <div style="flex:1;height:1px;background:#dbeeff;"></div>
+                <span style="font-size:11px;color:#94a3b8;">BPMP Gorontalo</span>
+                <div style="flex:1;height:1px;background:#dbeeff;"></div>
+            </div>
+
+            <p style="font-size:12px;text-align:center;color:#94a3b8;">
+                Lupa akun? Hubungi
+                <span style="font-weight:600;color:#0073e6;">Admin Kepegawaian</span>
             </p>
         </div>
+
     </div>
 
 </body>

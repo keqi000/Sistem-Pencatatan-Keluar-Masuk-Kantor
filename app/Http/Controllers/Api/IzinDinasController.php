@@ -142,32 +142,33 @@ class IzinDinasController extends Controller
     /**
      * Putuskan izin dinas (Setujui / Tolak)
      */
-    public function putuskan(Request $request)
+    public function putuskan(Request $request, $id)
     {
         $request->validate([
-            'izin_id'        => 'required|exists:izin_dinas,id',
-            'status'         => 'required|in:disetujui,ditolak',
+            'aksi'           => 'required|in:setujui,tolak',
             'catatan_atasan' => 'nullable|string',
         ]);
 
-        if ($request->status === 'ditolak' && empty(trim($request->catatan_atasan ?? ''))) {
+        $status = $request->aksi === 'setujui' ? 'disetujui' : 'ditolak';
+
+        if ($status === 'ditolak' && empty(trim($request->catatan_atasan ?? ''))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Alasan penolakan izin dinas wajib diisi',
             ], 422);
         }
 
-        $izin = IzinDinas::findOrFail($request->izin_id);
+        $izin = IzinDinas::findOrFail($id);
         $izin->update([
-            'status'         => $request->status,
+            'status'         => $status,
             'catatan_atasan' => $request->catatan_atasan,
         ]);
 
-        ActivityLog::log('putuskan_izin_dinas', 'izin_dinas', $izin->id, "Memutuskan {$request->status} izin dinas #{$izin->id}");
+        ActivityLog::log('putuskan_izin_dinas', 'izin_dinas', $izin->id, "Memutuskan {$status} izin dinas #{$izin->id}");
 
         return response()->json([
             'success' => true,
-            'message' => 'Izin dinas berhasil ' . ($request->status === 'disetujui' ? 'disetujui' : 'ditolak'),
+            'message' => 'Izin dinas berhasil ' . ($status === 'disetujui' ? 'disetujui' : 'ditolak'),
             'data'    => $izin,
         ]);
     }

@@ -48,7 +48,9 @@
                 $q->whereYear('jam_keluar', substr($bulan, 0, 4))
                   ->whereMonth('jam_keluar', substr($bulan, 5, 2))
                   ->with('pindaianKeluar');
-            }])->where('status', 'aktif')->get();
+            }])->where('status', 'aktif')
+            ->when($unitKerjaId ?? 0, fn($q, $id) => $q->where('unit_kerja_id', $id))
+            ->get();
         @endphp
         <table>
             <thead>
@@ -94,6 +96,7 @@
         @php
             $records = \App\Models\PasanganKeluarMasuk::with(['pegawai.unitKerja', 'pindaianKeluar.izinDinas'])
                 ->whereDate('jam_keluar', $tanggal)
+                ->when($unitKerjaId ?? 0, fn($q, $id) => $q->whereHas('pegawai', fn($pq) => $pq->where('unit_kerja_id', $id)))
                 ->orderBy('jam_keluar', 'asc')
                 ->get();
         @endphp
