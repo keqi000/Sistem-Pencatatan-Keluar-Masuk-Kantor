@@ -74,21 +74,25 @@ const headers = {
 
 async function loadData() {
     try {
-        const res = await fetch(`/api/riwayat/semua?id=${catatanId}`, { headers });
-        const { data } = await res.json();
-        const r = Array.isArray(data) ? data[0] : data;
-        if (!r) return;
+        const res = await fetch(`/api/riwayat/all?per_page=1&pasangan_id=${catatanId}`, { headers });
+        const json = await res.json();
+        const r = (json.data ?? [])[0];
+        if (!r) {
+            document.getElementById('info-pegawai').textContent = 'Data tidak ditemukan';
+            return;
+        }
 
         document.getElementById('info-pegawai').innerHTML = `
-            <span class="font-semibold text-primary">${r.pegawai?.nama_lengkap ?? '-'}</span>
-            <span class="mx-2">·</span>${r.pegawai?.unit_kerja?.nama_unit ?? ''}
-            <span class="mx-2">·</span>${r.tanggal ?? ''}
+            <span style="font-weight:700;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</span>
+            <span style="margin:0 6px;color:#cbd5e1;">·</span>${r.nama_unit ?? ''}
         `;
 
-        if (r.jam_keluar) document.getElementById('input-jam-keluar').value = r.jam_keluar.replace(' ', 'T');
-        if (r.jam_kembali) document.getElementById('input-jam-kembali').value = r.jam_kembali.replace(' ', 'T');
+        if (r.jam_keluar)  document.getElementById('input-jam-keluar').value  = r.jam_keluar.replace(' ', 'T').substring(0, 16);
+        if (r.jam_kembali) document.getElementById('input-jam-kembali').value = r.jam_kembali.replace(' ', 'T').substring(0, 16);
         if (r.keperluan_jenis) document.getElementById('sel-keperluan').value = r.keperluan_jenis;
-    } catch (_) {}
+    } catch (_) {
+        document.getElementById('info-pegawai').textContent = 'Gagal memuat data';
+    }
 }
 
 document.getElementById('form-catatan').addEventListener('submit', async (e) => {

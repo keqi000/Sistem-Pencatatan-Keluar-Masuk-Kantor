@@ -51,13 +51,11 @@ Route::middleware(['auth', 'role:pos'])->prefix('pos')->name('pos.')->group(func
 // Admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminPageController::class, 'dashboard'])->name('dashboard');
-    Route::get('/pegawai', [AdminPageController::class, 'pegawai'])->name('pegawai');
-    Route::get('/pegawai/create', [AdminPageController::class, 'pegawaiCreate'])->name('pegawai.create');
-    Route::get('/pegawai/{id}/edit', [AdminPageController::class, 'pegawaiEdit'])->name('pegawai.edit');
     Route::get('/catatan', [AdminPageController::class, 'catatan'])->name('catatan');
     Route::get('/catatan/{id}/edit', [AdminPageController::class, 'catatanEdit'])->name('catatan.edit');
     Route::get('/rekap', [AdminPageController::class, 'rekap'])->name('rekap');
     Route::get('/pengaturan', [AdminPageController::class, 'pengaturan'])->name('pengaturan');
+    Route::get('/akun', [AdminPageController::class, 'akun'])->name('akun');
 });
 
 // Pimpinan

@@ -83,20 +83,20 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'username'   => 'required|string|max:50|unique:users,username,' . $id,
-            'full_name'  => 'required|string|max:150',
-            'role'       => 'required|in:pegawai,atasan,lobby,pos,admin,pimpinan',
+            'username'   => 'sometimes|string|max:50|unique:users,username,' . $id,
+            'full_name'  => 'sometimes|string|max:150',
+            'role'       => 'sometimes|in:pegawai,atasan,lobby,pos,admin,pimpinan',
             'status'     => 'nullable|in:aktif,tidak_aktif',
             'pegawai_id' => 'nullable|exists:pegawai,id',
         ]);
 
-        $user->update([
-            'username'   => $request->username,
-            'full_name'  => $request->full_name,
-            'role'       => $request->role,
+        $user->update(array_filter([
+            'username'   => $request->username ?? $user->username,
+            'full_name'  => $request->full_name ?? $user->full_name,
+            'role'       => $request->role ?? $user->role,
             'status'     => $request->input('status', $user->status),
-            'pegawai_id' => $request->pegawai_id,
-        ]);
+            'pegawai_id' => $request->has('pegawai_id') ? $request->pegawai_id : $user->pegawai_id,
+        ], fn($v) => $v !== null));
 
         ActivityLog::log('update_user', 'users', $id, "Admin memperbarui akun user: {$user->username}");
 

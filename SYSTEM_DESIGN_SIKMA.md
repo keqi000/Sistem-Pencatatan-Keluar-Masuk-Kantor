@@ -1,8 +1,8 @@
 # SYSTEM DESIGN - SIKMA
 ## Sistem Informasi Keluar Masuk BPMP Gorontalo
 
-**Versi**: 2.0.0
-**Status**: Draft
+**Versi**: 2.1.0
+**Status**: Active Development
 **Last Updated**: 2026
 **Stack**: Laravel 11 + Blade + Vanilla JS + Laravel Breeze + Laravel Sanctum
 
@@ -29,7 +29,7 @@ Sistem ini **tidak menggantikan** absen masuk/pulang yang sudah ada. Hanya menca
 | **Atasan Langsung** | `/atasan/*` | Setujui atau tolak pengajuan izin dinas bawahan |
 | **Akun Lobby** | `/lobby/*` | Hanya tampilkan QR Keluar yang berganti sendiri |
 | **Akun Pos** | `/pos/*` | Tampilkan QR Masuk + daftar pindaian hari ini |
-| **Admin Kepegawaian** | `/admin/*` | Kelola akun, jam kerja, rekap seluruh balai |
+| **Admin Kepegawaian** | `/admin/*` | Kelola akun & pegawai (terintegrasi), catatan, rekap seluruh balai |
 | **Pimpinan** | `/pimpinan/*` | Lihat rekap unit kerjanya (read-only) |
 
 > Akun Lobby dan Akun Pos **tidak bisa** mengisi, mengubah, atau menghapus data. Keduanya hanya menampilkan QR dan hasil pindaian.
@@ -71,6 +71,7 @@ SIKMA/
 │   ├── Http/
 │   │   ├── Controllers/
 │   │   │   ├── Api/                        # API Controllers (return JSON)
+│   │   │   │   ├── AuthController.php
 │   │   │   │   ├── QRController.php
 │   │   │   │   ├── PindaianController.php
 │   │   │   │   ├── IzinDinasController.php
@@ -132,10 +133,7 @@ SIKMA/
 │   │   │   └── layar.blade.php
 │   │   ├── admin/
 │   │   │   ├── dashboard.blade.php
-│   │   │   ├── pegawai/
-│   │   │   │   ├── index.blade.php
-│   │   │   │   ├── create.blade.php
-│   │   │   │   └── edit.blade.php
+│   │   │   ├── akun.blade.php              # CRUD Akun + Pegawai terintegrasi (modal)
 │   │   │   ├── catatan/
 │   │   │   │   ├── index.blade.php
 │   │   │   │   └── edit.blade.php
@@ -219,7 +217,7 @@ Semua halaman (kecuali lobby & pos yang fullscreen) menggunakan layout utama `la
 |------|-------------|
 | Pegawai | Dashboard, Scan QR, Izin Dinas, Riwayat Saya |
 | Atasan | Izin Dinas Bawahan |
-| Admin | Dashboard, Pegawai, Catatan, Rekap, Pengaturan |
+| Admin | Dashboard, Akun & Pegawai, Catatan, Rekap, Pengaturan |
 | Pimpinan | Rekap Unit |
 | Lobby | *(tidak ada sidebar — fullscreen)* |
 | Pos | *(tidak ada sidebar — fullscreen)* |
@@ -428,29 +426,33 @@ Semua halaman (kecuali lobby & pos yang fullscreen) menggunakan layout utama `la
 
 ---
 
-### 10. 👥 MANAJEMEN PEGAWAI (ADMIN)
-**Route**: `GET /admin/pegawai`
-**Controller**: `AdminPageController@pegawai`, `pegawaiCreate`, `pegawaiEdit`
-**View**: `resources/views/admin/pegawai/index.blade.php`, `create.blade.php`, `edit.blade.php`
+### 10. 👥 MANAJEMEN AKUN & PEGAWAI (ADMIN)
+**Route**: `GET /admin/akun`
+**Controller**: `AdminPageController@akun`
+**View**: `resources/views/admin/akun.blade.php`
 
 - Controller hanya render view, data diambil via `fetch()` JS
+- CRUD Akun (User) dan Data Pegawai **terintegrasi dalam satu halaman** dengan modal
+- Membuat akun otomatis membuat/mengupdate data pegawai terkait (untuk role pegawai/atasan/pimpinan)
 
 **Konten tampilan**:
-- Grid daftar pegawai: foto, nama, NIP, jabatan, unit kerja, status
-- Search & filter: unit kerja, jabatan, status aktif/tidak
-- CRUD: Tambah, Edit, Hapus + delete confirmation modal
-- Upload foto pegawai dengan preview
-- Assign atasan langsung
-- Pagination 12 per halaman
+- Tab filter role: Semua / Pegawai / Atasan / Pimpinan / Admin / Lobby / Pos
+- Search: nama, username, NIP
+- Tabel: foto, nama, username, NIP & jabatan, unit kerja, role badge, status badge, aksi icon
+- Aksi per baris: ✏️ Edit (modal) · 🔒 Reset Password (modal) · 🗑️ Hapus (modal konfirmasi)
+- Modal Tambah/Edit: section Info Akun + section Data Kepegawaian (kondisional per role)
+  - Upload foto pegawai dengan preview
+  - Assign atasan langsung
+- Modal Reset Password
+- Modal Hapus (akun aktif → nonaktifkan, tidak aktif → hapus permanen jika tidak ada riwayat)
 
 **API yang dipanggil JS**:
-- `GET /api/pegawai`
-- `GET /api/pegawai/{id}`
-- `POST /api/pegawai`
-- `PUT /api/pegawai/{id}`
-- `DELETE /api/pegawai/{id}`
-
-**CSS Classes**: `.admin-pegawai-grid`, `.admin-pegawai-card`, `.admin-pegawai-form`
+- `GET /api/users`, `POST /api/users`, `PUT /api/users/{id}`, `DELETE /api/users/{id}`
+- `POST /api/users/reset-password` — body: `{ id, new_password }`
+- `GET /api/pegawai?all=1` (dropdown atasan)
+- `GET /api/pengaturan/unit-kerja` (dropdown unit)
+- `POST /api/pegawai` (buat data pegawai)
+- `POST /api/pegawai/{id}` + `_method: POST` (update data pegawai, multipart/foto)
 
 ---
 
@@ -469,12 +471,12 @@ Semua halaman (kecuali lobby & pos yang fullscreen) menggunakan layout utama `la
 - Pagination 20 per halaman
 
 **API yang dipanggil JS**:
-- `GET /api/riwayat/semua`
-- `POST /api/pindaian/catat-masuk` (tutup manual)
-- `PUT /api/riwayat/{id}`
-- `DELETE /api/riwayat/{id}`
+- `GET /api/riwayat/all` — filter: `tanggal`, `search`, `status`, `pasangan_id`, `per_page`
+- `POST /api/pindaian/tutup-manual` — body: `{ pasangan_id }`
+- `PUT /api/pindaian/{id}` (koreksi jam/keperluan)
+- `DELETE /api/pindaian/{id}`
 
-**CSS Classes**: `.admin-catatan-table`, `.admin-catatan-filter`
+**Aksi tabel**: ✅ Tutup (hijau, hanya jika terbuka) · ✏️ Edit (biru) · 🗑️ Hapus (merah) — semua icon SVG 28×28px
 
 ---
 
@@ -800,17 +802,22 @@ Semua route API didaftarkan di `routes/api.php`, dilindungi `auth:sanctum`.
 # Auth (routes/web.php — pakai Laravel Breeze)
 POST   /login
 POST   /logout
+GET    /api/auth/me
+GET    /api/auth/check-session
+POST   /api/auth/logout
 
-# QR
-GET    /api/qr/current?jenis=keluar
-GET    /api/qr/current?jenis=masuk
+# QR (sebagian publik)
+GET    /api/qr/current?jenis=keluar|masuk
 POST   /api/qr/validate
 
 # Pindaian
 POST   /api/pindaian/catat-keluar
 POST   /api/pindaian/catat-masuk
 GET    /api/pindaian/status-saya
-GET    /api/pindaian/hari-ini-pos
+GET    /api/pindaian/pos-hari-ini          # publik, untuk layar pos
+POST   /api/pindaian/tutup-manual          # admin only
+PUT    /api/pindaian/{id}                  # admin only
+DELETE /api/pindaian/{id}                  # admin only
 
 # Izin Dinas
 GET    /api/izin-dinas
@@ -820,19 +827,19 @@ POST   /api/izin-dinas/{id}/putuskan
 GET    /api/izin-dinas/aktif-hari-ini
 
 # Riwayat
-GET    /api/riwayat
-GET    /api/riwayat/semua
+GET    /api/riwayat/saya                   # pegawai login
+GET    /api/riwayat/all                    # admin/pimpinan — filter: tanggal, search, status, pasangan_id
 
 # Dashboard Admin
-GET    /api/dashboard/stats
-GET    /api/dashboard/sedang-diluar
-GET    /api/dashboard/chart
+GET    /api/dashboard/stats                # response key: stats.{total_keluar, sedang_diluar, sudah_kembali, belum_kembali}
+GET    /api/dashboard/sedang-diluar        # response key: data[].{is_overdue, durasi_format, jam_keluar, nama_unit}
+GET    /api/dashboard/chart                # response key: chart.{labels, datasets[]}
 
 # Pegawai
 GET    /api/pegawai
 GET    /api/pegawai/{id}
 POST   /api/pegawai
-PUT    /api/pegawai/{id}
+POST   /api/pegawai/{id}                   # update (multipart + _method:POST, support upload foto)
 DELETE /api/pegawai/{id}
 
 # Rekap
@@ -843,22 +850,46 @@ GET    /api/rekap/export-excel
 
 # Pengaturan
 GET    /api/pengaturan/jam-kerja
-PUT    /api/pengaturan/jam-kerja
+POST   /api/pengaturan/jam-kerja
 GET    /api/pengaturan/unit-kerja
-POST   /api/pengaturan/unit-kerja
-PUT    /api/pengaturan/unit-kerja/{id}
-DELETE /api/pengaturan/unit-kerja/{id}
+POST   /api/pengaturan/unit-kerja          # CRUD unit kerja dalam satu endpoint
 
 # User
 GET    /api/users
 POST   /api/users
 PUT    /api/users/{id}
 DELETE /api/users/{id}
-POST   /api/users/{id}/reset-password
+POST   /api/users/reset-password           # body: { id, new_password }
 ```
 
 ---
 
-**Status**: 📝 Design Document
-**Version**: 2.0.0
+---
+
+## 🐛 BUG FIXES & CATATAN IMPLEMENTASI
+
+### Timezone
+- `config/app.php` → `'timezone' => env('APP_TIMEZONE', 'Asia/Makassar')`
+- `.env` → `APP_TIMEZONE=Asia/Makassar` (WITA UTC+8, bukan WIB UTC+7)
+
+### diffInMinutes — Urutan Argumen Carbon
+- **Benar**: `$jam_keluar->diffInMinutes(now())` atau `$jam_keluar->diffInMinutes($jam_kembali)`
+- **Salah**: `now()->diffInMinutes($jam_keluar)` → hasil 0 karena arah terbalik
+- Berlaku di: `DashboardController@getSedangDiluar`, `PindaianController@catatMasuk`, `PindaianController@tutupManual`
+
+### Dashboard Admin — Response Key Mapping
+- Stats: key `stats`, bukan `data`
+- Sedang di luar: `is_overdue` (bukan `melebihi_estimasi`), `durasi_format` (bukan `durasi_berjalan`)
+- Chart: key `chart`, bukan `data` — `datasets[]` sudah lengkap dari API
+- Card "Belum Kembali" dihitung on-the-fly dari `is_overdue`, bukan dari `status = belum_kembali`
+
+### Aksi Tabel — Icon SVG
+- Semua tombol aksi pakai icon SVG 28×28px dengan `title` tooltip, bukan teks
+- Catatan: ✅ Tutup (hijau) · ✏️ Edit (biru) · 🗑️ Hapus (merah)
+- Akun: ✏️ Edit (biru) · 🔒 Reset PW (oranye) · 🗑️ Hapus (merah)
+
+---
+
+**Status**: 🚧 Active Development
+**Version**: 2.1.0
 **Last Updated**: 2026

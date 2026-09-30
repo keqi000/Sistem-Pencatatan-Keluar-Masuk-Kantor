@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Layar Pos Security — SIKMA</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-bpmp.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     @vite(['resources/css/app.css'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -309,15 +311,8 @@
         @csrf
     </form>
 
-    @vite(['resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
-    const headers = {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-    };
-
-    let countdownVal = 30, maxVal = 30, countdownTimer = null;
+    let countdownVal = 10, maxVal = 10, countdownTimer = null;
     let lastPindaianCount = 0;
     const circumference = 169.6;
 
@@ -343,19 +338,24 @@
     // QR
     async function fetchQR() {
         try {
-            const res = await fetch('/api/qr/current?jenis=masuk', { headers });
-            const { data } = await res.json();
-            if (!data?.token) return;
+            const res = await fetch('/api/qr/current?jenis=masuk');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            if (!json?.token) return;
 
             const container = document.getElementById('qr-container');
-            container.innerHTML = '<canvas id="qr-canvas"></canvas>';
-            await QRCode.toCanvas(document.getElementById('qr-canvas'), data.token, {
-                width: 200, margin: 1,
-                color: { dark: '#0a2e5c', light: '#ffffff' },
+            container.innerHTML = '<div id="qr-canvas"></div>';
+            new QRCode(document.getElementById('qr-canvas'), {
+                text: json.token,
+                width: 200,
+                height: 200,
+                colorDark: '#0a2e5c',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
             });
 
-            countdownVal = Math.max(0, Math.round((new Date(data.expired_at) - new Date()) / 1000));
-            maxVal = countdownVal > 0 ? countdownVal : 30;
+            maxVal = json.interval ?? 10;
+            countdownVal = json.remaining_seconds ?? maxVal;
             updateRing();
             startCountdown();
         } catch (_) {}
@@ -373,9 +373,9 @@
     // Pindaian
     async function fetchPindaian() {
         try {
-            const res = await fetch('/api/pindaian/pos-hari-ini', { headers });
-            const { data } = await res.json();
-            const list = data ?? [];
+            const res = await fetch('/api/pindaian/pos-hari-ini');
+            const json = await res.json();
+            const list = json.data ?? [];
 
             document.getElementById('total-pindaian').textContent = `${list.length} pindaian`;
 

@@ -95,6 +95,9 @@ class RiwayatController extends Controller
         if ($request->filled('pegawai_id')) {
             $query->where('pegawai_id', $request->pegawai_id);
         }
+        if ($request->filled('pasangan_id')) {
+            $query->where('id', $request->pasangan_id);
+        }
         if ($request->filled('tanggal')) {
             $query->whereDate('jam_keluar', $request->tanggal);
         } else {

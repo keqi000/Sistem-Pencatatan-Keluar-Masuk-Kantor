@@ -164,7 +164,7 @@ class PindaianController extends Controller
 
         $result = DB::transaction(function () use ($pegawai, $openSession) {
             $now = now();
-            $durasiMenit = max(0, (int)$now->diffInMinutes($openSession->jam_keluar));
+            $durasiMenit = max(0, (int)$openSession->jam_keluar->diffInMinutes($now));
 
             $pindaianMasuk = Pindaian::create([
                 'pegawai_id'  => $pegawai->id,
@@ -327,7 +327,7 @@ class PindaianController extends Controller
         $pasangan = PasanganKeluarMasuk::findOrFail($request->pasangan_id);
         $jamKembali = $request->filled('jam_kembali') ? Carbon::parse($request->jam_kembali) : now();
         $status = $request->input('status', 'kembali');
-        $durasiMenit = max(0, (int)$jamKembali->diffInMinutes($pasangan->jam_keluar));
+        $durasiMenit = max(0, (int)$pasangan->jam_keluar->diffInMinutes($jamKembali));
 
         $pasangan->update([
             'jam_kembali'  => $jamKembali,

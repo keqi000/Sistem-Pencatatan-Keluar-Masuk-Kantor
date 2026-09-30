@@ -23,7 +23,7 @@ class DashboardController extends Controller
             $unitKerjaId = (int)$user->pegawai->unit_kerja_id;
         }
 
-        $query = PasanganKeluarMasuk::with(['pindaianKeluar'])
+        $query = PasanganKeluarMasuk::with(['pindaianKeluar.izinDinas'])
             ->whereDate('jam_keluar', today());
 
         if ($unitKerjaId > 0) {
@@ -34,11 +34,20 @@ class DashboardController extends Controller
 
         $records = $query->get();
 
+        $threshold = (int)Pengaturan::get('ambang_terlambat_menit', 120);
+
+        $belumKembali = $records->where('status', 'terbuka')->filter(function ($r) use ($threshold) {
+            $durasi = (int)$r->jam_keluar->diffInMinutes(now());
+            if ($durasi >= $threshold) return true;
+            $izin = $r->pindaianKeluar?->izinDinas;
+            return $izin && !empty($izin->perkiraan_jam_kembali) && now()->format('H:i:s') > $izin->perkiraan_jam_kembali;
+        })->count();
+
         $stats = [
             'total_keluar'         => $records->count(),
             'sedang_diluar'        => $records->where('status', 'terbuka')->count(),
             'sudah_kembali'        => $records->where('status', 'kembali')->count(),
-            'belum_kembali'        => $records->where('status', 'belum_kembali')->count(),
+            'belum_kembali'        => $belumKembali,
             'total_dinas'          => $records->filter(fn($r) => $r->pindaianKeluar?->keperluan_jenis === 'dinas')->count(),
             'total_keperluan_lain' => $records->filter(fn($r) => $r->pindaianKeluar?->keperluan_jenis === 'keperluan_lain')->count(),
             'total_durasi_menit'   => (int)$records->sum('durasi_menit'),
@@ -77,7 +86,7 @@ class DashboardController extends Controller
         }
 
         $records = $query->orderBy('jam_keluar', 'asc')->get()->map(function ($item) use ($threshold) {
-            $durasi = max(0, (int)now()->diffInMinutes($item->jam_keluar));
+            $durasi = max(0, (int)$item->jam_keluar->diffInMinutes(now()));
             $isOverdue = ($durasi >= $threshold);
 
             $izin = $item->pindaianKeluar?->izinDinas;

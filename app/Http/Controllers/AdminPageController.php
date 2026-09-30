@@ -11,21 +11,6 @@ class AdminPageController extends Controller
         return view('admin.dashboard');
     }
 
-    public function pegawai()
-    {
-        return view('admin.pegawai.index');
-    }
-
-    public function pegawaiCreate()
-    {
-        return view('admin.pegawai.create');
-    }
-
-    public function pegawaiEdit($id)
-    {
-        return view('admin.pegawai.edit', compact('id'));
-    }
-
     public function catatan()
     {
         return view('admin.catatan.index');
@@ -44,5 +29,10 @@ class AdminPageController extends Controller
     public function pengaturan()
     {
         return view('admin.pengaturan');
+    }
+
+    public function akun()
+    {
+        return view('admin.akun');
     }
 }

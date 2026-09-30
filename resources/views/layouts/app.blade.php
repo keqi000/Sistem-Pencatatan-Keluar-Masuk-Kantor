@@ -7,6 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <title>@yield('title', 'SIKMA') — BPMP Gorontalo</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-bpmp.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -49,8 +50,8 @@
 
         {{-- Logo + nama instansi --}}
         <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#0a2e5c 0%,#0073e6 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(0,115,230,0.25);">
-                <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" style="width:24px;height:24px;object-fit:contain;">
+            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#0a2e5c 0%,#0073e6 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(0,115,230,0.25);">
+                <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" style="width:26px;height:26px;object-fit:contain;border-radius:8px;">
             </div>
             <div style="display:flex;flex-direction:column;line-height:1.25;">
                 <span style="font-size:13px;font-weight:800;color:#0a2e5c;letter-spacing:-0.01em;">BPMP Provinsi Gorontalo</span>

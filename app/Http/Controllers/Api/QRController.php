@@ -25,8 +25,8 @@ class QRController extends Controller
             ], 422);
         }
 
-        $interval = (int)Pengaturan::get('qr_interval', 30);
-        $interval = max(10, min(300, $interval));
+        $interval = (int)Pengaturan::get('qr_interval', 10);
+        $interval = max(5, min(300, $interval));
 
         // Bersihkan token lama
         QrSesaat::where('expired_at', '<', now()->subMinutes(5))->delete();

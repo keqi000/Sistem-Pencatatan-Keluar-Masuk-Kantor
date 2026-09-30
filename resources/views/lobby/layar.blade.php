@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Layar Lobby — SIKMA</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-bpmp.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     @vite(['resources/css/app.css'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -180,16 +182,14 @@
 
     </div>
 
-    @vite(['resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
     const headers = {
         'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
     };
 
-    let countdownVal = 30;
-    let maxVal = 30;
+    let countdownVal = 10;
+    let maxVal = 10;
     let countdownTimer = null;
     const circumference = 188.5;
 
@@ -209,24 +209,38 @@
 
     async function fetchQR() {
         try {
-            const res = await fetch('/api/qr/current?jenis=keluar', { headers });
-            const { data } = await res.json();
-            if (!data?.token) return;
+            console.log('fetchQR: mulai fetch...');
+            const res = await fetch('/api/qr/current?jenis=keluar');
+            console.log('fetchQR: status HTTP', res.status);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            console.log('fetchQR: response JSON', json);
+            if (!json?.token) throw new Error('token tidak ada di response');
 
             const container = document.getElementById('qr-container');
-            container.innerHTML = '<canvas id="qr-canvas"></canvas>';
+            container.innerHTML = '<div id="qr-canvas"></div>';
 
-            await QRCode.toCanvas(document.getElementById('qr-canvas'), data.token, {
-                width: 220, margin: 1,
-                color: { dark: '#0a2e5c', light: '#ffffff' },
+            console.log('fetchQR: render QR token', json.token);
+            new QRCode(document.getElementById('qr-canvas'), {
+                text: json.token,
+                width: 220,
+                height: 220,
+                colorDark: '#0a2e5c',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
             });
+            console.log('fetchQR: QR berhasil dirender');
 
-            const expiredAt = new Date(data.expired_at);
-            countdownVal = Math.max(0, Math.round((expiredAt - new Date()) / 1000));
-            maxVal = countdownVal > 0 ? countdownVal : 30;
+            maxVal = json.interval ?? 10;
+            countdownVal = json.remaining_seconds ?? maxVal;
             updateRing();
             startCountdown();
-        } catch (_) {}
+        } catch (e) {
+            console.error('fetchQR error:', e);
+            document.getElementById('qr-container').innerHTML =
+                '<p style="font-size:12px;color:#dc2626;">Gagal memuat QR: ' + e.message + '</p>';
+            setTimeout(fetchQR, 3000);
+        }
     }
 
     function startCountdown() {

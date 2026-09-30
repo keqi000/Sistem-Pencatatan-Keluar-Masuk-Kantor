@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — SIKMA BPMP Gorontalo</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-bpmp.png') }}">
     @vite(['resources/css/app.css'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -162,8 +163,8 @@
 
             {{-- Logo --}}
             <div style="position:relative;display:flex;align-items:center;gap:12px;">
-                <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);flex-shrink:0;">
-                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" style="width:32px;height:32px;object-fit:contain;">
+                <div style="width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);flex-shrink:0;">
+                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo BPMP" style="width:32px;height:32px;object-fit:contain;border-radius:10px;">
                 </div>
                 <div>
                     <p style="color:white;font-weight:700;font-size:13px;">BPMP Provinsi</p>
@@ -215,8 +216,8 @@
 
             {{-- Mobile header --}}
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;" class="lg:hidden">
-                <div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);flex-shrink:0;">
-                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo" style="width:24px;height:24px;object-fit:contain;">
+                <div style="width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);flex-shrink:0;">
+                    <img src="{{ asset('img/logo-bpmp.png') }}" alt="Logo" style="width:24px;height:24px;object-fit:contain;border-radius:8px;">
                 </div>
                 <div>
                     <p style="color:#0a2e5c;font-weight:700;font-size:13px;">BPMP Provinsi Gorontalo</p>
