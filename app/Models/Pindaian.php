@@ -19,6 +19,7 @@ class Pindaian extends Model
         'keperluan_jenis',
         'izin_dinas_id',
         'pasangan_id',
+        'catatan_pos',
     ];
 
     protected $casts = [

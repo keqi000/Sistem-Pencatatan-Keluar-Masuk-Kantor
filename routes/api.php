@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pindaian/catat-keluar', [PindaianController::class, 'catatKeluar']);
     Route::post('/pindaian/catat-masuk', [PindaianController::class, 'catatMasuk']);
     Route::get('/pindaian/status-saya', [PindaianController::class, 'getStatusSaya']);
+    Route::get('/pindaian/semua-pegawai-status', [PindaianController::class, 'getAllPegawaiStatus'])->middleware('role:pos,admin');
+    Route::post('/pindaian/catat-manual-pos', [PindaianController::class, 'catatManualPos'])->middleware('role:pos,admin');
     Route::post('/pindaian/tutup-manual', [PindaianController::class, 'tutupManual'])->middleware('role:admin');
     Route::put('/pindaian/{id}', [PindaianController::class, 'update'])->middleware('role:admin');
     Route::delete('/pindaian/{id}', [PindaianController::class, 'destroy'])->middleware('role:admin');

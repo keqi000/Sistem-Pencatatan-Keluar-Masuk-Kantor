@@ -20,6 +20,8 @@ class PasanganKeluarMasuk extends Model
         'durasi_menit',
         'status',
         'catatan',
+        'catatan_pos',
+        'is_manual_pos',
     ];
 
     protected $casts = [

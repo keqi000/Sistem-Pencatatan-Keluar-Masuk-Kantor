@@ -10,6 +10,8 @@ use App\Models\PasanganKeluarMasuk;
 use App\Models\QrSesaat;
 use App\Models\IzinDinas;
 use App\Models\ActivityLog;
+use App\Models\Pegawai;
+use Carbon\Carbon;
 
 class PindaianController extends Controller
 {
@@ -285,6 +287,8 @@ class PindaianController extends Controller
                     'jam_kembali'     => $p->jam_kembali?->format('H:i'),
                     'durasi_menit'    => $durasi,
                     'keperluan_jenis' => $p->pindaianKeluar?->keperluan_jenis,
+                    'catatan_pos'     => $p->catatan_pos,
+                    'is_manual_pos'   => (bool)$p->is_manual_pos,
                     'status'          => $p->status,
                 ];
             });
@@ -294,6 +298,132 @@ class PindaianController extends Controller
             'count'       => $pasangans->count(),
             'server_time' => now()->toDateTimeString(),
             'data'        => $pasangans,
+        ]);
+    }
+
+    /**
+     * Daftar semua pegawai aktif + status hari ini (untuk tab Semua Pegawai di Pos)
+     */
+    public function getAllPegawaiStatus(Request $request)
+    {
+        $pegawais = Pegawai::with('unitKerja')
+            ->where('status', 'aktif')
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        // Ambil semua sesi terbuka hari ini
+        $sesiTerbuka = PasanganKeluarMasuk::whereDate('jam_keluar', today())
+            ->where('status', 'terbuka')
+            ->pluck('jam_keluar', 'pegawai_id')
+            ->toArray();
+
+        // Ambil semua yang sudah kembali hari ini
+        $sudahKembali = PasanganKeluarMasuk::whereDate('jam_keluar', today())
+            ->where('status', 'kembali')
+            ->pluck('jam_kembali', 'pegawai_id')
+            ->toArray();
+
+        $threshold = (int)\App\Models\Pengaturan::get('ambang_terlambat_menit', 120);
+
+        $data = $pegawais->map(function ($p) use ($sesiTerbuka, $sudahKembali, $threshold) {
+            if (isset($sesiTerbuka[$p->id])) {
+                $jamKeluar = Carbon::parse($sesiTerbuka[$p->id]);
+                $durasi = max(0, (int)$jamKeluar->diffInMinutes(now()));
+                $status = $durasi >= $threshold ? 'belum_kembali' : 'diluar';
+            } elseif (isset($sudahKembali[$p->id])) {
+                $status = 'kembali';
+                $durasi = 0;
+                $jamKeluar = null;
+            } else {
+                $status = 'di_kantor';
+                $durasi = 0;
+                $jamKeluar = null;
+            }
+
+            return [
+                'pegawai_id'   => $p->id,
+                'nama_lengkap' => $p->nama_lengkap,
+                'nip'          => $p->nip,
+                'jabatan'      => $p->jabatan,
+                'nama_unit'    => $p->unitKerja?->nama_unit,
+                'foto'         => $p->foto,
+                'status'       => $status,
+                'jam_keluar'   => $jamKeluar?->format('H:i'),
+                'durasi_menit' => $durasi,
+            ];
+        });
+
+        return response()->json([
+            'success'     => true,
+            'count'       => $data->count(),
+            'server_time' => now()->toDateTimeString(),
+            'data'        => $data,
+        ]);
+    }
+
+    /**
+     * Catat manual oleh Petugas Pos (pegawai keluar tanpa scan QR)
+     */
+    public function catatManualPos(Request $request)
+    {
+        $request->validate([
+            'pegawai_id'  => 'required|exists:pegawai,id',
+            'jam_keluar'  => 'nullable|date_format:H:i',
+            'catatan_pos' => 'required|string|max:500',
+        ]);
+
+        $pegawai = Pegawai::findOrFail($request->pegawai_id);
+
+        // Cek sesi terbuka
+        $existing = PasanganKeluarMasuk::where('pegawai_id', $pegawai->id)
+            ->where('status', 'terbuka')
+            ->whereDate('jam_keluar', today())
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pegawai ini sudah memiliki catatan keluar yang masih terbuka hari ini.',
+            ], 400);
+        }
+
+        $jamKeluar = $request->filled('jam_keluar')
+            ? Carbon::today()->setTimeFromTimeString($request->jam_keluar)
+            : now();
+
+        $result = DB::transaction(function () use ($pegawai, $jamKeluar, $request) {
+            $pindaian = Pindaian::create([
+                'pegawai_id'      => $pegawai->id,
+                'jenis'           => 'keluar',
+                'jam'             => $jamKeluar,
+                'tempat'          => 'pos',
+                'keperluan_jenis' => 'tanpa_izin',
+                'catatan_pos'     => $request->catatan_pos,
+            ]);
+
+            $pasangan = PasanganKeluarMasuk::create([
+                'pegawai_id'         => $pegawai->id,
+                'pindaian_keluar_id' => $pindaian->id,
+                'jam_keluar'         => $jamKeluar,
+                'status'             => 'terbuka',
+                'catatan_pos'        => $request->catatan_pos,
+                'is_manual_pos'      => true,
+            ]);
+
+            $pindaian->update(['pasangan_id' => $pasangan->id]);
+
+            ActivityLog::log(
+                'catat_manual_pos', 'pindaian', $pindaian->id,
+                "Pos mencatat manual: {$pegawai->nama_lengkap} keluar tanpa izin. Catatan: {$request->catatan_pos}"
+            );
+
+            return $pasangan->id;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Catatan manual untuk {$pegawai->nama_lengkap} berhasil disimpan.",
+            'data'    => ['pasangan_id' => $result],
         ]);
     }
 

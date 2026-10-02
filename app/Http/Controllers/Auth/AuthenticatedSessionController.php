@@ -13,7 +13,15 @@ class AuthenticatedSessionController extends Controller
     public function create()
     {
         if (auth()->check()) {
-            return redirect($this->redirectForRole(auth()->user()->role));
+            $role = auth()->user()->role;
+            $validRoles = ['pegawai','atasan','lobby','pos','admin','pimpinan'];
+            if (in_array($role, $validRoles)) {
+                return redirect($this->redirectForRole($role));
+            }
+            // Role tidak valid — logout paksa
+            Auth::logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
         }
         return response(view('auth.login'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
@@ -61,7 +69,7 @@ class AuthenticatedSessionController extends Controller
             'pos'      => route('pos.layar'),
             'admin'    => route('admin.dashboard'),
             'pimpinan' => route('pimpinan.rekap'),
-            default    => '/',
+            default    => route('login'),
         };
     }
 }

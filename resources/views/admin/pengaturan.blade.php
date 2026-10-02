@@ -121,6 +121,58 @@
         </form>
     </div>
 
+    {{-- Jam Kerja Khusus Jumat --}}
+    <div class="section-card">
+        <div class="section-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Jam Kerja Khusus Hari Jumat</p>
+                    <p style="font-size:11px;color:#64748b;margin-top:1px;">Atur jam kerja berbeda untuk hari Jumat (WFA, jam pendek, dll)</p>
+                </div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="jumat_aktif" style="width:16px;height:16px;accent-color:#7c3aed;" onchange="toggleJumatSection()">
+                <span style="font-size:13px;font-weight:600;color:#7c3aed;">Aktifkan</span>
+            </label>
+        </div>
+        <div id="jumat-section-body" style="padding:20px;display:none;flex-direction:column;gap:16px;">
+            <div style="padding:10px 14px;background:#fdf4ff;border-radius:10px;border:1px solid #e9d5ff;">
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label class="form-label">Keterangan</label>
+                    <input type="text" id="jumat_keterangan" placeholder="Contoh: WFA / Jam Pendek" class="form-input">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;" class="grid-jamkerja">
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label class="form-label">Jam Masuk Jumat</label>
+                    <input type="time" id="jumat_jam_masuk" class="form-input">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label class="form-label">Jam Pulang Jumat</label>
+                    <input type="time" id="jumat_jam_pulang" class="form-input">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label class="form-label">Istirahat Mulai <span style="color:#94a3b8;font-weight:400;">(opsional)</span></label>
+                    <input type="time" id="jumat_jam_istirahat_mulai" class="form-input">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label class="form-label">Istirahat Selesai <span style="color:#94a3b8;font-weight:400;">(opsional)</span></label>
+                    <input type="time" id="jumat_jam_istirahat_selesai" class="form-input">
+                </div>
+            </div>
+            <div>
+                <button type="button" onclick="simpanJumat()" style="padding:9px 22px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(124,58,237,0.25);transition:all 0.15s;"
+                    onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
+                    Simpan Pengaturan Jumat
+                </button>
+            </div>
+            <div id="jumat-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:10px;"></div>
+        </div>
+    </div>
+
     {{-- Unit Kerja --}}
     <div class="section-card">
         <div class="section-header">
@@ -217,7 +269,45 @@ async function loadJamKerja() {
         document.getElementById('qr_interval').value            = s.qr_interval ?? 10;
         document.getElementById('ambang_terlambat_menit').value = s.ambang_terlambat_menit ?? 120;
         document.getElementById('hitung_jam_istirahat').checked = s.hitung_jam_istirahat == 1;
+        // Jumat
+        document.getElementById('jumat_aktif').checked                  = s.jumat_aktif == 1;
+        document.getElementById('jumat_jam_masuk').value                = s.jumat_jam_masuk ?? '07:30';
+        document.getElementById('jumat_jam_pulang').value               = s.jumat_jam_pulang ?? '11:30';
+        document.getElementById('jumat_jam_istirahat_mulai').value      = s.jumat_jam_istirahat_mulai ?? '';
+        document.getElementById('jumat_jam_istirahat_selesai').value    = s.jumat_jam_istirahat_selesai ?? '';
+        document.getElementById('jumat_keterangan').value               = s.jumat_keterangan ?? 'WFA / Jam Pendek';
+        toggleJumatSection();
     } catch (_) {}
+}
+
+function toggleJumatSection() {
+    const aktif = document.getElementById('jumat_aktif').checked;
+    document.getElementById('jumat-section-body').style.display = aktif ? 'flex' : 'none';
+}
+
+async function simpanJumat() {
+    const msgEl = document.getElementById('jumat-msg');
+    const payload = {
+        jumat_aktif:                 document.getElementById('jumat_aktif').checked ? 1 : 0,
+        jumat_jam_masuk:             document.getElementById('jumat_jam_masuk').value,
+        jumat_jam_pulang:            document.getElementById('jumat_jam_pulang').value,
+        jumat_jam_istirahat_mulai:   document.getElementById('jumat_jam_istirahat_mulai').value,
+        jumat_jam_istirahat_selesai: document.getElementById('jumat_jam_istirahat_selesai').value,
+        jumat_keterangan:            document.getElementById('jumat_keterangan').value,
+    };
+    try {
+        const res = await fetch('/api/pengaturan/jam-kerja', { method:'POST', headers, body: JSON.stringify(payload) });
+        const json = await res.json();
+        msgEl.style.display = 'block';
+        if (res.ok) {
+            msgEl.textContent = '✓ Pengaturan Jumat berhasil disimpan';
+            msgEl.style.background = '#fdf4ff'; msgEl.style.color = '#7c3aed'; msgEl.style.border = '1px solid #e9d5ff';
+        } else {
+            msgEl.textContent = json.message ?? 'Gagal menyimpan';
+            msgEl.style.background = '#fef2f2'; msgEl.style.color = '#dc2626'; msgEl.style.border = '1px solid #fecaca';
+        }
+        setTimeout(() => msgEl.style.display = 'none', 3000);
+    } catch (_) { showToast('Gagal terhubung ke server', 'danger'); }
 }
 
 document.getElementById('form-jamkerja').addEventListener('submit', async (e) => {

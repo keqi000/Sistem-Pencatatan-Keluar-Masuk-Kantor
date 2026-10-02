@@ -20,16 +20,23 @@ class PengaturanController extends Controller
         return response()->json([
             'success'  => true,
             'settings' => [
-                'nama_instansi'          => $settings['nama_instansi'] ?? 'Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo',
-                'kementerian'            => $settings['kementerian'] ?? 'Kementerian Pendidikan Dasar dan Menengah',
-                'alamat_instansi'        => $settings['alamat_instansi'] ?? 'Jl. Kasmat Lahay, Gorontalo',
-                'jam_masuk'              => $settings['jam_masuk'] ?? '07:30',
-                'jam_pulang'             => $settings['jam_pulang'] ?? '16:00',
-                'jam_istirahat_mulai'    => $settings['jam_istirahat_mulai'] ?? '12:00',
-                'jam_istirahat_selesai'  => $settings['jam_istirahat_selesai'] ?? '13:00',
-                'hitung_jam_istirahat'   => (int)($settings['hitung_jam_istirahat'] ?? 0),
-                'qr_interval'            => (int)($settings['qr_interval'] ?? 30),
-                'ambang_terlambat_menit' => (int)($settings['ambang_terlambat_menit'] ?? 120),
+                'nama_instansi'               => $settings['nama_instansi'] ?? 'Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo',
+                'kementerian'                 => $settings['kementerian'] ?? 'Kementerian Pendidikan Dasar dan Menengah',
+                'alamat_instansi'             => $settings['alamat_instansi'] ?? 'Jl. Kasmat Lahay, Gorontalo',
+                'jam_masuk'                   => $settings['jam_masuk'] ?? '07:30',
+                'jam_pulang'                  => $settings['jam_pulang'] ?? '16:00',
+                'jam_istirahat_mulai'         => $settings['jam_istirahat_mulai'] ?? '12:00',
+                'jam_istirahat_selesai'       => $settings['jam_istirahat_selesai'] ?? '13:00',
+                'hitung_jam_istirahat'        => (int)($settings['hitung_jam_istirahat'] ?? 0),
+                'qr_interval'                 => (int)($settings['qr_interval'] ?? 30),
+                'ambang_terlambat_menit'      => (int)($settings['ambang_terlambat_menit'] ?? 120),
+                // Jumat
+                'jumat_aktif'                 => (int)($settings['jumat_aktif'] ?? 0),
+                'jumat_jam_masuk'             => $settings['jumat_jam_masuk'] ?? '07:30',
+                'jumat_jam_pulang'            => $settings['jumat_jam_pulang'] ?? '11:30',
+                'jumat_jam_istirahat_mulai'   => $settings['jumat_jam_istirahat_mulai'] ?? '',
+                'jumat_jam_istirahat_selesai' => $settings['jumat_jam_istirahat_selesai'] ?? '',
+                'jumat_keterangan'            => $settings['jumat_keterangan'] ?? 'WFA / Jam Pendek',
             ],
         ]);
     }
@@ -43,6 +50,9 @@ class PengaturanController extends Controller
             'nama_instansi', 'kementerian', 'alamat_instansi',
             'jam_masuk', 'jam_pulang', 'jam_istirahat_mulai', 'jam_istirahat_selesai',
             'hitung_jam_istirahat', 'qr_interval', 'ambang_terlambat_menit',
+            // Jumat
+            'jumat_aktif', 'jumat_jam_masuk', 'jumat_jam_pulang',
+            'jumat_jam_istirahat_mulai', 'jumat_jam_istirahat_selesai', 'jumat_keterangan',
         ];
 
         $updated = [];

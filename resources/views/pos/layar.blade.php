@@ -287,15 +287,31 @@
 
             {{-- Daftar --}}
             <div class="pos-daftar-side">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;">
-                    <div>
-                        <p style="font-size:14px;font-weight:800;color:#0a2e5c;">Pindaian Hari Ini</p>
-                        <p style="font-size:10px;color:#64748b;margin-top:1px;">Diperbarui otomatis setiap 10 detik</p>
+
+                {{-- Tab --}}
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;flex-wrap:wrap;gap:8px;">
+                    <div style="display:flex;gap:3px;background:#f8fbff;border-radius:10px;border:1px solid #dbeeff;padding:3px;">
+                        <button id="tab-pindaian" onclick="switchPosTab('pindaian')"
+                            style="padding:5px 14px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;box-shadow:0 2px 6px rgba(0,115,230,0.2);">
+                            Pindaian Hari Ini
+                        </button>
+                        <button id="tab-pegawai" onclick="switchPosTab('pegawai')"
+                            style="padding:5px 14px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:#64748b;">
+                            Semua Pegawai
+                        </button>
                     </div>
-                    <span id="total-pindaian" style="font-size:11px;font-weight:600;color:#0073e6;padding:3px 10px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);"></span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span id="total-pindaian" style="font-size:11px;font-weight:600;color:#0073e6;padding:3px 10px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);"></span>
+                        <button id="btn-catat-manual" onclick="openModalCatat()"
+                            style="display:none;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;font-size:11px;font-weight:700;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(220,38,38,0.25);">
+                            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            Catat Tanpa Izin
+                        </button>
+                    </div>
                 </div>
 
-                <div class="table-wrap">
+                {{-- Tab: Pindaian --}}
+                <div id="panel-pindaian" class="table-wrap">
                     <table>
                         <thead>
                             <tr>
@@ -312,6 +328,26 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Tab: Semua Pegawai --}}
+                <div id="panel-pegawai" class="table-wrap" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th class="hide-mobile">Unit</th>
+                                <th class="hide-mobile">Jabatan</th>
+                                <th>Status</th>
+                                <th>Keluar</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pegawai-tbody">
+                            <tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
 
         </div>
@@ -321,10 +357,49 @@
         @csrf
     </form>
 
+    {{-- Modal Catat Tanpa Izin --}}
+    <div id="modal-catat" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;padding:16px;background:rgba(10,46,92,0.4);backdrop-filter:blur(6px);">
+        <div style="background:#fff;border-radius:20px;box-shadow:0 32px 80px rgba(10,46,92,0.2);width:100%;max-width:420px;padding:24px;border:1px solid #dbeeff;animation:modalIn 0.2s ease;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+                <div style="width:34px;height:34px;border-radius:9px;background:#fef2f2;border:1px solid #fecaca;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 style="font-size:15px;font-weight:800;color:#0a2e5c;">Catat Keluar Tanpa Izin</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Pegawai <span style="color:#dc2626;">*</span></label>
+                    <select id="catat-pegawai-id" style="padding:8px 12px;border-radius:10px;border:1.5px solid #dbeeff;background:#f8fbff;color:#0a2e5c;font-size:13px;outline:none;font-family:inherit;width:100%;">
+                        <option value="">Pilih pegawai...</option>
+                    </select>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Perkiraan Jam Keluar</label>
+                    <input type="time" id="catat-jam" style="padding:8px 12px;border-radius:10px;border:1.5px solid #dbeeff;background:#f8fbff;color:#0a2e5c;font-size:13px;outline:none;font-family:inherit;width:100%;">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Catatan / Keterangan <span style="color:#dc2626;">*</span></label>
+                    <textarea id="catat-keterangan" rows="3" placeholder="Contoh: Terlihat keluar jam 09.00 tanpa melapor ke pos..." style="padding:8px 12px;border-radius:10px;border:1.5px solid #dbeeff;background:#f8fbff;color:#0a2e5c;font-size:13px;outline:none;font-family:inherit;width:100%;resize:vertical;"></textarea>
+                </div>
+                <div id="catat-error" style="display:none;font-size:12px;color:#dc2626;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;"></div>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button onclick="submitCatat()" style="flex:1;padding:10px;border-radius:10px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;">Simpan Catatan</button>
+                <button onclick="closeModalCatat()" style="flex:1;padding:10px;border-radius:10px;background:#f8fbff;border:1.5px solid #dbeeff;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;">Batal</button>
+            </div>
+        </div>
+    </div>
+    <style>@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}</style>
+
     <script>
+    const H = { 'Accept':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content };
+    const HJ = { ...H, 'Content-Type':'application/json' };
+
     let countdownVal = 10, maxVal = 10, countdownTimer = null;
     let lastPindaianCount = 0;
     const circumference = 144.5;
+    let activeTab = 'pindaian';
+    let allPegawaiList = [];
 
     const isMobile = () => window.innerWidth <= 768;
 
@@ -347,22 +422,19 @@
     async function fetchQR() {
         try {
             const res = await fetch('/api/qr/current?jenis=masuk');
-            if (!res.ok) throw new Error('HTTP ' + res.status);
+            if (!res.ok) throw new Error();
             const json = await res.json();
             if (!json?.token) return;
-
             const size = isMobile() ? 120 : 180;
             const container = document.getElementById('qr-container');
             container.style.width = size + 'px';
             container.style.height = size + 'px';
             container.innerHTML = '<div id="qr-canvas"></div>';
             new QRCode(document.getElementById('qr-canvas'), {
-                text: json.token,
-                width: size, height: size,
+                text: json.token, width: size, height: size,
                 colorDark: '#0a2e5c', colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M,
             });
-
             maxVal = json.interval ?? 10;
             countdownVal = json.remaining_seconds ?? maxVal;
             updateRing();
@@ -379,51 +451,164 @@
         }, 1000);
     }
 
+    function switchPosTab(tab) {
+        activeTab = tab;
+        const btnP = document.getElementById('tab-pindaian');
+        const btnG = document.getElementById('tab-pegawai');
+        const panP = document.getElementById('panel-pindaian');
+        const panG = document.getElementById('panel-pegawai');
+        const btnCatat = document.getElementById('btn-catat-manual');
+
+        const activeStyle = 'padding:5px 14px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;box-shadow:0 2px 6px rgba(0,115,230,0.2);';
+        const inactiveStyle = 'padding:5px 14px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:#64748b;';
+
+        if (tab === 'pindaian') {
+            btnP.style.cssText = activeStyle;
+            btnG.style.cssText = inactiveStyle;
+            panP.style.display = 'block';
+            panG.style.display = 'none';
+            btnCatat.style.display = 'none';
+        } else {
+            btnP.style.cssText = inactiveStyle;
+            btnG.style.cssText = activeStyle;
+            panP.style.display = 'none';
+            panG.style.display = 'block';
+            btnCatat.style.display = 'inline-flex';
+            fetchAllPegawai();
+        }
+    }
+
     async function fetchPindaian() {
+        if (activeTab !== 'pindaian') return;
         try {
             const res = await fetch('/api/pindaian/pos-hari-ini');
             const json = await res.json();
             const list = json.data ?? [];
-
             document.getElementById('total-pindaian').textContent = `${list.length} catatan`;
-
             const isNew = list.length > lastPindaianCount;
             lastPindaianCount = list.length;
-
             const tbody = document.getElementById('pindaian-tbody');
             if (!list.length) {
                 tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Belum ada pindaian hari ini</td></tr>`;
                 return;
             }
-
             const mobile = isMobile();
+            const keperluanLabel = { dinas:'Dinas', keperluan_lain:'Kep. Lain', tanpa_izin:'Tanpa Izin' };
+            const statusMap = {
+                terbuka:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
+                kembali:       { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Kembali' },
+                belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum' },
+            };
             tbody.innerHTML = list.map((p, i) => {
-                const statusMap = {
-                    terbuka:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
-                    kembali:       { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Kembali' },
-                    belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum' },
-                };
                 const s = statusMap[p.status] ?? { bg:'#f8fbff', color:'#64748b', border:'#dbeeff', label: p.status };
-                return `
-                <tr class="${i === 0 && isNew ? 'highlight-new' : ''}">
-                    <td style="font-weight:600;color:#0a2e5c;">${p.nama_lengkap ?? '-'}</td>
+                const isManual = p.is_manual_pos;
+                return `<tr class="${i === 0 && isNew ? 'highlight-new' : ''}">
+                    <td style="font-weight:600;color:#0a2e5c;">
+                        ${p.nama_lengkap ?? '-'}
+                        ${isManual ? '<span style="font-size:9px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:4px;padding:1px 5px;margin-left:4px;">Manual</span>' : ''}
+                    </td>
                     ${mobile ? '' : `<td style="color:#64748b;font-size:11px;">${p.nama_unit ?? '-'}</td>`}
-                    <td style="color:#0073e6;font-weight:600;font-variant-numeric:tabular-nums;">${p.jam_keluar ?? '-'}</td>
-                    <td style="color:#16a34a;font-weight:600;font-variant-numeric:tabular-nums;">${p.jam_kembali ?? '<span style="color:#94a3b8;">—</span>'}</td>
-                    ${mobile ? '' : `<td style="color:#64748b;font-size:11px;text-transform:capitalize;">${p.keperluan_jenis?.replace('_',' ') ?? '-'}</td>`}
+                    <td style="color:#0073e6;font-weight:600;">${p.jam_keluar ?? '-'}</td>
+                    <td style="color:#16a34a;font-weight:600;">${p.jam_kembali ?? '<span style="color:#94a3b8;">—</span>'}</td>
+                    ${mobile ? '' : `<td style="color:#64748b;font-size:11px;">${keperluanLabel[p.keperluan_jenis] ?? (p.keperluan_jenis ?? '-')}</td>`}
+                    <td><span style="display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${s.label}</span></td>
+                </tr>`;
+            }).join('');
+        } catch (_) {}
+    }
+
+    async function fetchAllPegawai() {
+        try {
+            const res = await fetch('/api/pindaian/semua-pegawai-status', { headers: H });
+            const json = await res.json();
+            const list = json.data ?? [];
+            allPegawaiList = list;
+            document.getElementById('total-pindaian').textContent = `${list.length} pegawai`;
+            const tbody = document.getElementById('pegawai-tbody');
+            if (!list.length) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;">Tidak ada data pegawai</td></tr>`;
+                return;
+            }
+            const mobile = isMobile();
+            const statusMap = {
+                di_kantor:    { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Di Kantor' },
+                diluar:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
+                belum_kembali:{ bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
+                kembali:      { bg:'#dbeeff', color:'#0073e6', border:'rgba(92,194,242,0.4)', label:'Sudah Kembali' },
+            };
+            tbody.innerHTML = list.map(p => {
+                const s = statusMap[p.status] ?? { bg:'#f8fbff', color:'#64748b', border:'#dbeeff', label: p.status };
+                const canCatat = p.status === 'di_kantor';
+                return `<tr>
+                    <td style="font-weight:600;color:#0a2e5c;font-size:12px;">${p.nama_lengkap}</td>
+                    ${mobile ? '' : `<td style="color:#64748b;font-size:11px;">${p.nama_unit ?? '-'}</td>`}
+                    ${mobile ? '' : `<td style="color:#64748b;font-size:11px;">${p.jabatan ?? '-'}</td>`}
+                    <td><span style="display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${s.label}</span></td>
+                    <td style="color:#0073e6;font-size:11px;font-weight:600;">${p.jam_keluar ?? '—'}</td>
                     <td>
-                        <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
-                            ${s.label}
-                        </span>
+                        ${canCatat ? `<button onclick="openModalCatatPegawai(${p.pegawai_id},'${p.nama_lengkap.replace(/'/g,"\\'")}')"
+                            style="padding:3px 10px;border-radius:6px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:11px;font-weight:600;cursor:pointer;">Catat</button>` : '<span style="color:#cbd5e1;font-size:11px;">—</span>'}
                     </td>
                 </tr>`;
             }).join('');
         } catch (_) {}
     }
 
+    function openModalCatat() {
+        // Isi dropdown pegawai dari list
+        const sel = document.getElementById('catat-pegawai-id');
+        sel.innerHTML = '<option value="">Pilih pegawai...</option>';
+        (allPegawaiList.filter(p => p.status === 'di_kantor')).forEach(p => {
+            sel.innerHTML += `<option value="${p.pegawai_id}">${p.nama_lengkap}</option>`;
+        });
+        document.getElementById('catat-jam').value = '';
+        document.getElementById('catat-keterangan').value = '';
+        document.getElementById('catat-error').style.display = 'none';
+        document.getElementById('modal-catat').style.display = 'flex';
+    }
+
+    function openModalCatatPegawai(id, nama) {
+        const sel = document.getElementById('catat-pegawai-id');
+        sel.innerHTML = `<option value="${id}">${nama}</option>`;
+        document.getElementById('catat-jam').value = '';
+        document.getElementById('catat-keterangan').value = '';
+        document.getElementById('catat-error').style.display = 'none';
+        document.getElementById('modal-catat').style.display = 'flex';
+    }
+
+    function closeModalCatat() {
+        document.getElementById('modal-catat').style.display = 'none';
+    }
+
+    async function submitCatat() {
+        const pegawaiId  = document.getElementById('catat-pegawai-id').value;
+        const jam        = document.getElementById('catat-jam').value;
+        const keterangan = document.getElementById('catat-keterangan').value.trim();
+        const errEl      = document.getElementById('catat-error');
+        errEl.style.display = 'none';
+
+        if (!pegawaiId) { errEl.textContent = 'Pilih pegawai terlebih dahulu'; errEl.style.display = 'block'; return; }
+        if (!keterangan) { errEl.textContent = 'Catatan / keterangan wajib diisi'; errEl.style.display = 'block'; return; }
+
+        const body = { pegawai_id: parseInt(pegawaiId), catatan_pos: keterangan };
+        if (jam) body.jam_keluar = jam;
+
+        try {
+            const res = await fetch('/api/pindaian/catat-manual-pos', { method:'POST', headers: HJ, body: JSON.stringify(body) });
+            const json = await res.json();
+            if (res.ok) {
+                closeModalCatat();
+                fetchAllPegawai();
+            } else {
+                errEl.textContent = json.message ?? 'Gagal menyimpan';
+                errEl.style.display = 'block';
+            }
+        } catch (_) { errEl.textContent = 'Gagal terhubung ke server'; errEl.style.display = 'block'; }
+    }
+
     fetchQR();
     fetchPindaian();
-    setInterval(fetchPindaian, 10000);
+    setInterval(() => { activeTab === 'pindaian' ? fetchPindaian() : fetchAllPegawai(); }, 10000);
 
     history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', function () {
