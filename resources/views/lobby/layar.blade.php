@@ -14,7 +14,6 @@
 
         html, body {
             width: 100%; height: 100%;
-            overflow: hidden;
             background-color: #f0f7ff;
             background-image:
                 radial-gradient(ellipse 70% 60% at 0% 0%, rgba(92,194,242,0.2) 0%, transparent 60%),
@@ -30,27 +29,26 @@
         }
 
         .lobby-wrapper {
-            width: 100vw;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0;
             position: relative;
             z-index: 1;
-            padding: 24px;
+            padding: 16px;
+            gap: 0;
         }
 
         .card {
             background: #ffffff;
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(10,46,92,0.12), 0 0 0 1px rgba(92,194,242,0.2);
-            padding: 32px 40px;
+            padding: clamp(16px, 3vh, 32px) clamp(20px, 4vw, 40px);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: clamp(12px, 2vh, 20px);
             width: 100%;
             max-width: 480px;
         }
@@ -58,7 +56,7 @@
         .qr-frame {
             background: #ffffff;
             border-radius: 20px;
-            padding: 16px;
+            padding: 12px;
             box-shadow: 0 4px 24px rgba(10,46,92,0.1), 0 0 0 1px rgba(92,194,242,0.2);
             position: relative;
         }
@@ -70,16 +68,24 @@
             width: 20px; height: 20px;
             border-color: #0073e6;
             border-style: solid;
+            z-index: 2;
         }
-        .qr-frame::before { top: 6px; left: 6px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
-        .qr-frame::after  { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+        .qr-frame::before { top: -1px; left: -1px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+        .qr-frame::after  { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+        #qr-container {
+            width: clamp(160px, 22vh, 220px);
+            height: clamp(160px, 22vh, 220px);
+        }
 
         .countdown-ring {
             position: relative;
-            width: 72px; height: 72px;
+            width: clamp(52px, 7vh, 72px);
+            height: clamp(52px, 7vh, 72px);
         }
         .countdown-ring svg {
             transform: rotate(-90deg);
+            width: 100%; height: 100%;
         }
         .countdown-ring .num {
             position: absolute;
@@ -87,9 +93,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: clamp(16px, 2.5vh, 22px);
             font-weight: 800;
             color: #0a2e5c;
+        }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .lobby-wrapper { padding: 12px; }
+            .card { border-radius: 18px; }
+            #qr-container { width: 180px !important; height: 180px !important; }
+            .countdown-ring { width: 56px !important; height: 56px !important; }
+            .countdown-ring .num { font-size: 18px !important; }
         }
     </style>
 </head>
@@ -209,34 +224,29 @@
 
     async function fetchQR() {
         try {
-            console.log('fetchQR: mulai fetch...');
             const res = await fetch('/api/qr/current?jenis=keluar');
-            console.log('fetchQR: status HTTP', res.status);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const json = await res.json();
-            console.log('fetchQR: response JSON', json);
             if (!json?.token) throw new Error('token tidak ada di response');
 
             const container = document.getElementById('qr-container');
+            const size = container.offsetWidth || 200;
             container.innerHTML = '<div id="qr-canvas"></div>';
 
-            console.log('fetchQR: render QR token', json.token);
             new QRCode(document.getElementById('qr-canvas'), {
                 text: json.token,
-                width: 220,
-                height: 220,
+                width: size,
+                height: size,
                 colorDark: '#0a2e5c',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M,
             });
-            console.log('fetchQR: QR berhasil dirender');
 
             maxVal = json.interval ?? 10;
             countdownVal = json.remaining_seconds ?? maxVal;
             updateRing();
             startCountdown();
         } catch (e) {
-            console.error('fetchQR error:', e);
             document.getElementById('qr-container').innerHTML =
                 '<p style="font-size:12px;color:#dc2626;">Gagal memuat QR: ' + e.message + '</p>';
             setTimeout(fetchQR, 3000);

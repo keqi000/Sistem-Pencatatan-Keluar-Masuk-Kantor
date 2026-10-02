@@ -2,6 +2,7 @@
 
 <aside style="
     width: 220px;
+    height: 100%;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -47,6 +48,7 @@
         @foreach($menuItems as $item)
             @php $isActive = request()->routeIs($item['match']); @endphp
             <a href="{{ route($item['route']) }}"
+               onclick="if(window.innerWidth<=768) closeSidebar()"
                style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;text-decoration:none;transition:all 0.15s;
                       {{ $isActive
                           ? 'background:#ffffff;color:#0073e6;font-weight:600;box-shadow:0 1px 6px rgba(0,115,230,0.12);border:1px solid rgba(0,115,230,0.18);'

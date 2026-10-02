@@ -13,6 +13,15 @@
     }
     tbody tr { transition: background 0.12s; }
     tbody tr:hover { background: #f8fbff; }
+    .dash-table th { padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left; }
+    .dash-table td { padding:11px 16px;font-size:13px;border-bottom:1px solid #f0f7ff; }
+    @media (max-width: 640px) {
+        .stat-card { padding: 14px; }
+        .stat-card p[id] { font-size: 22px !important; }
+        .dash-table th { padding: 8px 10px; font-size: 9px; }
+        .dash-table td { padding: 8px 10px; font-size: 11px; }
+        .hide-mobile { display: none !important; }
+    }
 </style>
 @endpush
 
@@ -49,14 +58,14 @@
                 <span id="last-refresh" style="font-size:11px;color:#94a3b8;"></span>
             </div>
             <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;">
+                <table style="width:100%;border-collapse:collapse;" class="dash-table">
                     <thead>
                         <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
-                            <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Nama</th>
-                            <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Unit</th>
-                            <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Keluar</th>
-                            <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Keperluan</th>
-                            <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Durasi</th>
+                            <th>Nama</th>
+                            <th class="hide-mobile">Unit</th>
+                            <th>Jam Keluar</th>
+                            <th class="hide-mobile">Keperluan</th>
+                            <th>Durasi</th>
                         </tr>
                     </thead>
                     <tbody id="diluar-tbody">
@@ -111,15 +120,16 @@ async function loadDiluar() {
             return;
         }
 
+        const isMobile = window.innerWidth <= 640;
         tbody.innerHTML = data.map(r => {
             const melebihi = r.is_overdue;
             const jamKeluar = r.jam_keluar ? new Date(r.jam_keluar).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}) : '-';
             return `<tr style="${melebihi ? 'background:#fef9f9;' : ''}">
-                <td style="${td}font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
-                <td style="${td}color:#64748b;font-size:12px;">${r.nama_unit ?? '-'}</td>
-                <td style="${td}color:#0073e6;font-weight:600;">${jamKeluar}</td>
-                <td style="${td}color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
-                <td style="${td}">
+                <td style="font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
+                ${isMobile ? '' : `<td style="color:#64748b;font-size:12px;">${r.nama_unit ?? '-'}</td>`}
+                <td style="color:#0073e6;font-weight:600;">${jamKeluar}</td>
+                ${isMobile ? '' : `<td style="color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>`}
+                <td>
                     <span style="font-size:12px;font-weight:600;color:${melebihi ? '#dc2626' : '#64748b'};">
                         ${melebihi ? '⚠ ' : ''}${r.durasi_format ?? '—'}
                     </span>

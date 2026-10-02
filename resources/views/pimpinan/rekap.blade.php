@@ -14,6 +14,7 @@
         outline: none;
         transition: all 0.15s;
         font-family: inherit;
+        width: 100%;
     }
     .filter-input:focus {
         border-color: #5cc2f2;
@@ -42,6 +43,34 @@
 
     tbody tr { transition: background 0.12s; }
     tbody tr:hover { background: #f8fbff; }
+
+    .rekap-table th {
+        padding: 10px 14px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        text-align: left;
+        white-space: nowrap;
+    }
+    .rekap-table td {
+        padding: 10px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f7ff;
+    }
+
+    .export-btns { display: flex; gap: 8px; }
+
+    @media (max-width: 640px) {
+        .filter-row { flex-direction: column !important; align-items: stretch !important; }
+        .filter-row > * { width: 100%; }
+        .export-btns { width: 100%; }
+        .export-btns button { flex: 1; justify-content: center; }
+        .rekap-table th { padding: 8px 10px; font-size: 9px; }
+        .rekap-table td { padding: 8px 10px; font-size: 11px; }
+        .tab-btn { padding: 6px 14px; font-size: 12px; }
+    }
 </style>
 @endpush
 
@@ -68,7 +97,7 @@
             <button class="tab-btn inactive" data-tab="bulanan" onclick="switchTab('bulanan')">Bulanan</button>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;" class="filter-row">
             <div id="filter-harian" style="display:flex;flex-direction:column;gap:5px;">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Tanggal</label>
                 <input type="date" id="input-tanggal" class="filter-input">
@@ -83,7 +112,7 @@
                 Tampilkan
             </button>
 
-            <div style="display:flex;gap:8px;margin-left:auto;">
+            <div style="display:flex;gap:8px;margin-left:auto;" class="export-btns">
                 <button onclick="exportDoc('pdf')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
                     <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -105,15 +134,15 @@
             <span id="rekap-info" style="font-size:12px;font-weight:600;color:#0073e6;padding:3px 12px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);"></span>
         </div>
         <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
+            <table style="width:100%;border-collapse:collapse;" class="rekap-table">
                 <thead id="rekap-thead">
                     <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Nama Pegawai</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Keluar</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Kembali</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Durasi</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Keperluan</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
+                        <th>Nama Pegawai</th>
+                        <th>Jam Keluar</th>
+                        <th>Jam Kembali</th>
+                        <th>Durasi</th>
+                        <th>Keperluan</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="rekap-tbody">
@@ -158,7 +187,7 @@ function switchTab(tab) {
     document.getElementById('filter-harian').style.display  = tab === 'harian'  ? 'flex' : 'none';
     document.getElementById('filter-bulanan').style.display = tab === 'bulanan' ? 'flex' : 'none';
 
-    const thStyle = 'padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;';
+    const thStyle = 'text-align:left;';
     const trStyle = 'background:#f8fbff;border-bottom:1px solid #dbeeff;';
     const thead = document.getElementById('rekap-thead');
 
@@ -225,18 +254,18 @@ async function loadRekap() {
             belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
         };
 
-        const tdBase = 'padding:11px 16px;font-size:13px;border-bottom:1px solid #f0f7ff;';
+        const tdBase = 'color:#0a2e5c;';
 
         if (activeTab === 'harian') {
             tbody.innerHTML = list.map(r => {
                 const s = statusBadge[r.status] ?? { bg:'#dbeeff', color:'#0073e6', border:'#bfdfff', label: r.status ?? '-' };
                 return `<tr>
-                    <td style="${tdBase}font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
-                    <td style="${tdBase}color:#0073e6;font-weight:600;">${r.jam_keluar ?? '-'}</td>
-                    <td style="${tdBase}color:#64748b;">${r.jam_kembali ?? '—'}</td>
-                    <td style="${tdBase}color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
-                    <td style="${tdBase}color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
-                    <td style="${tdBase}">
+                    <td style="font-weight:600;${tdBase}">${r.nama_lengkap ?? '-'}</td>
+                    <td style="color:#0073e6;font-weight:600;">${r.jam_keluar ?? '-'}</td>
+                    <td style="color:#64748b;">${r.jam_kembali ?? '—'}</td>
+                    <td style="color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
+                    <td style="color:#64748b;text-transform:capitalize;">${r.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
+                    <td>
                         <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
                             ${s.label}
                         </span>
@@ -245,10 +274,10 @@ async function loadRekap() {
             }).join('');
         } else {
             tbody.innerHTML = list.map(r => `<tr>
-                <td style="${tdBase}font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</td>
-                <td style="${tdBase}color:#64748b;">${r.jumlah_hari_keluar ?? 0} hari</td>
-                <td style="${tdBase}color:#64748b;">${r.total_menit_keluar ?? 0} mnt</td>
-                <td style="${tdBase}">
+                <td style="font-weight:600;${tdBase}">${r.nama_lengkap ?? '-'}</td>
+                <td style="color:#64748b;">${r.jumlah_hari_keluar ?? 0} hari</td>
+                <td style="color:#64748b;">${r.total_menit_keluar ?? 0} mnt</td>
+                <td>
                     ${r.belum_kembali > 0
                         ? `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">${r.belum_kembali}x</span>`
                         : `<span style="color:#94a3b8;">—</span>`}

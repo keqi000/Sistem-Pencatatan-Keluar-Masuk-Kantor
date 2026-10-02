@@ -51,6 +51,10 @@
         from { opacity:0; transform:scale(0.95) translateY(8px); }
         to   { opacity:1; transform:scale(1) translateY(0); }
     }
+    @media (max-width: 640px) {
+        .grid-jamkerja { grid-template-columns: 1fr !important; }
+        .inline-settings { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+    }
 </style>
 @endpush
 
@@ -68,7 +72,7 @@
             </div>
         </div>
         <form id="form-jamkerja" style="padding:20px;display:flex;flex-direction:column;gap:16px;">
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;" class="grid-jamkerja">
                 <div style="display:flex;flex-direction:column;gap:5px;">
                     <label class="form-label">Jam Mulai</label>
                     <input type="time" name="jam_masuk" id="jam_masuk" class="form-input">
@@ -87,7 +91,7 @@
                 </div>
             </div>
 
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;padding:14px 16px;background:#f8fbff;border-radius:12px;border:1px solid #dbeeff;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;padding:14px 16px;background:#f8fbff;border-radius:12px;border:1px solid #dbeeff;" class="inline-settings">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
                     <input type="checkbox" name="hitung_jam_istirahat" id="hitung_jam_istirahat" style="width:15px;height:15px;accent-color:#0073e6;border-radius:4px;">
                     <span style="font-size:13px;color:#0a2e5c;font-weight:500;">Hitung jam istirahat dalam durasi</span>

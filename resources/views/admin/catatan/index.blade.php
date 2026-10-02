@@ -9,6 +9,7 @@
         border: 1.5px solid #dbeeff; background: #f8fbff;
         color: #0a2e5c; font-size: 13px; outline: none;
         transition: all 0.15s; font-family: inherit;
+        width: 100%; box-sizing: border-box;
     }
     .filter-input:focus {
         border-color: #5cc2f2;
@@ -23,6 +24,15 @@
         background: rgba(10,46,92,0.3); backdrop-filter: blur(6px);
     }
     @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .cat-table th { padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;white-space:nowrap; }
+    .cat-table td { padding:10px 14px;font-size:13px;border-bottom:1px solid #f0f7ff; }
+    @media (max-width: 640px) {
+        .filter-row { flex-direction: column !important; align-items: stretch !important; }
+        .filter-row > div, .filter-row > button { width: 100%; }
+        .cat-table th { padding: 7px 8px; font-size: 9px; }
+        .cat-table td { padding: 7px 8px; font-size: 11px; }
+        .hide-mobile { display: none !important; }
+    }
 </style>
 @endpush
 
@@ -31,14 +41,14 @@
 
     {{-- Filter --}}
     <div style="background:#ffffff;border-radius:16px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 2px 12px rgba(10,46,92,0.05);padding:16px 18px;">
-        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;" class="filter-row">
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Tanggal</label>
                 <input type="date" id="filter-tanggal" class="filter-input">
             </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Pegawai</label>
-                <input type="text" id="filter-pegawai" placeholder="Nama pegawai..." class="filter-input" style="width:180px;">
+                <input type="text" id="filter-pegawai" placeholder="Nama pegawai..." class="filter-input">
             </div>
             <div style="display:flex;flex-direction:column;gap:5px;">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0a2e5c;">Status</label>
@@ -63,16 +73,16 @@
             <span id="total-info" style="font-size:12px;font-weight:600;color:#0073e6;padding:3px 12px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);display:none;"></span>
         </div>
         <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
+            <table style="width:100%;border-collapse:collapse;" class="cat-table">
                 <thead>
                     <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Pegawai</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Tanggal</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Keluar</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Jam Kembali</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Durasi</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Aksi</th>
+                        <th>Pegawai</th>
+                        <th class="hide-mobile">Tanggal</th>
+                        <th>Jam Keluar</th>
+                        <th>Jam Kembali</th>
+                        <th class="hide-mobile">Durasi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="catatan-tbody">
@@ -158,26 +168,27 @@ async function loadCatatan(page = 1) {
             belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
         };
 
+        const isMobile = window.innerWidth <= 640;
         tbody.innerHTML = data.map(r => {
             const s = statusBadge[r.status] ?? { bg:'#dbeeff', color:'#0073e6', border:'#bfdfff', label: r.status ?? '-' };
             const jamKeluar  = r.jam_keluar  ? r.jam_keluar.substring(11,19)  : '-';
             const jamKembali = r.jam_kembali ? r.jam_kembali.substring(11,19) : '—';
             const tanggal    = r.jam_keluar  ? r.jam_keluar.substring(0,10)   : '-';
             return `<tr>
-                <td style="${td}">
+                <td>
                     <p style="font-weight:600;color:#0a2e5c;">${r.nama_lengkap ?? '-'}</p>
                     <p style="font-size:11px;color:#94a3b8;">${r.nama_unit ?? ''}</p>
                 </td>
-                <td style="${td}color:#0a2e5c;">${tanggal}</td>
-                <td style="${td}color:#0073e6;font-weight:600;">${jamKeluar}</td>
-                <td style="${td}color:#64748b;">${jamKembali}</td>
-                <td style="${td}color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>
-                <td style="${td}">
+                ${isMobile ? '' : `<td style="color:#0a2e5c;">${tanggal}</td>`}
+                <td style="color:#0073e6;font-weight:600;">${jamKeluar}</td>
+                <td style="color:#64748b;">${jamKembali}</td>
+                ${isMobile ? '' : `<td style="color:#64748b;">${r.durasi_menit ? r.durasi_menit + ' mnt' : '—'}</td>`}
+                <td>
                     <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
                         ${s.label}
                     </span>
                 </td>
-                <td style="${td}">
+                <td>
                     <div style="display:flex;gap:6px;align-items:center;">
                         ${r.status === 'terbuka' ? `<button onclick="tutupManual(${r.pasangan_id})" title="Tutup Manual" style="width:28px;height:28px;border-radius:7px;background:#f0fdf4;border:1px solid #bbf7d0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>` : ''}
                         <a href="/admin/catatan/${r.pasangan_id}/edit" title="Edit" style="width:28px;height:28px;border-radius:7px;background:#dbeeff;border:1px solid rgba(92,194,242,0.4);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.background='#bfdfff'" onmouseout="this.style.background='#dbeeff'"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#0073e6" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></a>

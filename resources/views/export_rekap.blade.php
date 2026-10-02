@@ -28,7 +28,7 @@
 <body>
     <div class="no-print" style="margin-bottom: 15px;">
         <button onclick="window.print()" style="padding: 8px 16px; background: #1A5276; color: #fff; border: none; cursor: pointer; border-radius: 4px;">🖨️ Cetak / Simpan PDF</button>
-        <button onclick="window.history.back()" style="padding: 8px 16px; background: #555; color: #fff; border: none; cursor: pointer; border-radius: 4px;">Kembali</button>
+        <button onclick="window.close()" style="padding: 8px 16px; background: #555; color: #fff; border: none; cursor: pointer; border-radius: 4px;">✕ Tutup</button>
     </div>
 
     <div class="kop">

@@ -18,6 +18,19 @@ tbody tr:hover{background:#f8fbff;}
 .section-divider{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;padding:8px 0 4px;border-bottom:1px solid #f0f7ff;margin-bottom:8px;}
 .foto-preview{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #dbeeff;}
 .foto-placeholder{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#0073e6,#5cc2f2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white;flex-shrink:0;}
+.akun-table th{padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;white-space:nowrap;}
+.akun-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f0f7ff;vertical-align:middle;}
+@media (max-width: 640px) {
+    .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-scroll::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: 5px 10px; font-size: 11px; white-space: nowrap; }
+    .toolbar-right { flex-direction: column; align-items: stretch !important; }
+    .toolbar-right input { width: 100% !important; }
+    .akun-table th { padding: 7px 8px; font-size: 9px; }
+    .akun-table td { padding: 7px 8px; font-size: 11px; }
+    .hide-mobile { display: none !important; }
+    .grid-2col { grid-template-columns: 1fr !important; }
+}
 </style>
 @endpush
 
@@ -26,14 +39,14 @@ tbody tr:hover{background:#f8fbff;}
 
     {{-- Toolbar --}}
     <div style="background:#fff;border-radius:16px;border:1px solid rgba(92,194,242,0.2);box-shadow:0 2px 12px rgba(10,46,92,0.05);padding:14px 18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;gap:3px;background:#f8fbff;border-radius:10px;border:1px solid #dbeeff;padding:3px;">
+        <div class="tab-scroll" style="display:flex;gap:3px;background:#f8fbff;border-radius:10px;border:1px solid #dbeeff;padding:3px;">
             @foreach(['semua'=>'Semua','pegawai'=>'Pegawai','atasan'=>'Atasan','pimpinan'=>'Pimpinan','admin'=>'Admin','lobby'=>'Lobby','pos'=>'Pos'] as $val=>$label)
             <button class="tab-btn {{ $val==='semua'?'active':'inactive' }}" data-tab="{{ $val }}" onclick="filterRole('{{ $val }}')">{{ $label }}</button>
             @endforeach
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="toolbar-right" style="display:flex;gap:8px;align-items:center;">
             <input type="text" id="filter-search" placeholder="Cari nama / username / NIP..." oninput="loadUsers()" class="filter-input" style="width:220px;" autocomplete="off">
-            <button onclick="openModal()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,115,230,0.25);">
+            <button onclick="openModal()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:linear-gradient(135deg,#0073e6,#0056b3);color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,115,230,0.25);white-space:nowrap;">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Tambah
             </button>
@@ -47,15 +60,15 @@ tbody tr:hover{background:#f8fbff;}
             <span id="total-info" style="font-size:12px;font-weight:600;color:#0073e6;padding:3px 12px;border-radius:99px;background:#dbeeff;border:1px solid rgba(92,194,242,0.3);display:none;"></span>
         </div>
         <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
+            <table style="width:100%;border-collapse:collapse;" class="akun-table">
                 <thead>
                     <tr style="background:#f8fbff;border-bottom:1px solid #dbeeff;">
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Pegawai / Akun</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">NIP & Jabatan</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Unit Kerja</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Role</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Status</th>
-                        <th style="padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;text-align:left;">Aksi</th>
+                        <th>Pegawai / Akun</th>
+                        <th class="hide-mobile">NIP & Jabatan</th>
+                        <th class="hide-mobile">Unit Kerja</th>
+                        <th>Role</th>
+                        <th class="hide-mobile">Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="user-tbody">
@@ -85,7 +98,7 @@ tbody tr:hover{background:#f8fbff;}
                 <label class="form-label">Nama Lengkap <span style="color:#dc2626;">*</span></label>
                 <input type="text" id="akun-nama" placeholder="Nama lengkap" class="form-input" autocomplete="off">
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="grid-2col">
                 <div style="display:flex;flex-direction:column;gap:5px;">
                     <label class="form-label">Username <span style="color:#dc2626;">*</span></label>
                     <input type="text" id="akun-username" placeholder="Username login" class="form-input" autocomplete="off">
@@ -95,7 +108,7 @@ tbody tr:hover{background:#f8fbff;}
                     <input type="password" id="akun-password" placeholder="Min. 6 karakter" class="form-input" autocomplete="new-password">
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="grid-2col">
                 <div style="display:flex;flex-direction:column;gap:5px;">
                     <label class="form-label">Role <span style="color:#dc2626;">*</span></label>
                     <select id="akun-role" class="form-input" onchange="onRoleChange()">
@@ -135,7 +148,7 @@ tbody tr:hover{background:#f8fbff;}
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="grid-2col">
                     <div style="display:flex;flex-direction:column;gap:5px;">
                         <label class="form-label">NIP <span style="color:#dc2626;">*</span></label>
                         <input type="text" id="akun-nip" placeholder="NIP pegawai" class="form-input" autocomplete="off">
@@ -151,7 +164,7 @@ tbody tr:hover{background:#f8fbff;}
                     <input type="text" id="akun-jabatan" placeholder="Jabatan / posisi" class="form-input" autocomplete="off">
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="grid-2col">
                     <div style="display:flex;flex-direction:column;gap:5px;">
                         <label class="form-label">Unit Kerja <span style="color:#dc2626;">*</span></label>
                         <select id="akun-unit" class="form-input">
@@ -290,6 +303,7 @@ async function loadUsers() {
             return;
         }
 
+        const isMobile = window.innerWidth <= 640;
         tbody.innerHTML = data.map(u => {
             const b = roleBadge[u.role] ?? { bg:'#f8fbff', color:'#64748b', border:'#dbeeff', label: u.role };
             const p = u.pegawai;
@@ -307,7 +321,7 @@ async function loadUsers() {
                 : `<span style="color:#cbd5e1;font-size:12px;">—</span>`;
 
             return `<tr>
-                <td style="${td}">
+                <td>
                     <div style="display:flex;align-items:center;gap:10px;">
                         ${fotoHtml}
                         <div>
@@ -316,11 +330,11 @@ async function loadUsers() {
                         </div>
                     </div>
                 </td>
-                <td style="${td}">${nipJabatan}</td>
-                <td style="${td}">${unit}</td>
-                <td style="${td}"><span style="display:inline-flex;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${b.bg};color:${b.color};border:1px solid ${b.border};">${b.label}</span></td>
-                <td style="${td}"><span style="display:inline-flex;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${u.status==='aktif'?'#f0fdf4':'#fef2f2'};color:${u.status==='aktif'?'#16a34a':'#dc2626'};border:1px solid ${u.status==='aktif'?'#bbf7d0':'#fecaca'};">${u.status==='aktif'?'Aktif':'Tidak Aktif'}</span></td>
-                <td style="${td}">
+                ${isMobile ? '' : `<td>${nipJabatan}</td>`}
+                ${isMobile ? '' : `<td>${unit}</td>`}
+                <td><span style="display:inline-flex;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${b.bg};color:${b.color};border:1px solid ${b.border};">${b.label}</span></td>
+                ${isMobile ? '' : `<td><span style="display:inline-flex;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${u.status==='aktif'?'#f0fdf4':'#fef2f2'};color:${u.status==='aktif'?'#16a34a':'#dc2626'};border:1px solid ${u.status==='aktif'?'#bbf7d0':'#fecaca'};">${u.status==='aktif'?'Aktif':'Tidak Aktif'}</span></td>`}
+                <td>
                     <div style="display:flex;gap:6px;align-items:center;">
                         <button onclick="openModal(${u.id})" title="Edit" style="width:28px;height:28px;border-radius:7px;background:#dbeeff;border:1px solid rgba(92,194,242,0.4);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.background='#bfdfff'" onmouseout="this.style.background='#dbeeff'"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#0073e6" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
                         <button onclick="openReset(${u.id})" title="Reset Password" style="width:28px;height:28px;border-radius:7px;background:#fff7ed;border:1px solid #fed7aa;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.background='#ffedd5'" onmouseout="this.style.background='#fff7ed'"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#ea580c" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></button>
