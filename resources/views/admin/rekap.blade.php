@@ -46,14 +46,8 @@
                 Tampilkan
             </button>
             <div class="flex gap-2 ml-auto">
-                <a id="btn-pdf" href="#"
-                    class="px-4 py-2 bg-danger text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition shadow shadow-red-200">
-                    ↓ PDF
-                </a>
-                <a id="btn-excel" href="#"
-                    class="px-4 py-2 bg-success text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow shadow-green-200">
-                    ↓ Excel
-                </a>
+                <button onclick="exportDoc('pdf')" class="px-4 py-2 bg-danger text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition shadow shadow-red-200 cursor-pointer">↓ PDF</button>
+                <button onclick="exportDoc('excel')" class="px-4 py-2 bg-success text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow shadow-green-200 cursor-pointer">↓ Excel</button>
             </div>
         </div>
     </div>
@@ -98,9 +92,16 @@ let activeTab = 'harian';
 document.getElementById('input-tanggal').value = new Date().toISOString().split('T')[0];
 document.getElementById('input-bulan').value   = new Date().toISOString().slice(0, 7);
 
-const todayStr = new Date().toISOString().split('T')[0];
-document.getElementById('btn-pdf').href   = `/api/rekap/export-pdf?tipe=harian&tanggal=${todayStr}`;
-document.getElementById('btn-excel').href = `/api/rekap/export-excel?tipe=harian&tanggal=${todayStr}`;
+function exportDoc(tipe) {
+    if (!window._exportQuery) {
+        alert('Pilih tanggal/bulan dan klik Tampilkan terlebih dahulu sebelum mengunduh.');
+        return;
+    }
+    const url = tipe === 'pdf'
+        ? `/api/rekap/export-pdf?${window._exportQuery}`
+        : `/api/rekap/export-excel?${window._exportQuery}`;
+    window.open(url, '_blank');
+}
 
 async function loadUnits() {
     try {
@@ -148,9 +149,19 @@ function switchTab(tab) {
 
 async function loadRekap() {
     const tbody = document.getElementById('rekap-tbody');
+    const unit = document.getElementById('filter-unit').value;
+
+    if (activeTab === 'harian' && !document.getElementById('input-tanggal').value) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-muted">Pilih tanggal terlebih dahulu</td></tr>`;
+        return;
+    }
+    if (activeTab === 'bulanan' && !document.getElementById('input-bulan').value) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-muted">Pilih bulan terlebih dahulu</td></tr>`;
+        return;
+    }
+
     tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-muted">Memuat...</td></tr>`;
 
-    const unit = document.getElementById('filter-unit').value;
     const params = new URLSearchParams();
     if (unit) params.append('unit_id', unit);
 
@@ -166,9 +177,7 @@ async function loadRekap() {
         url = '/api/rekap/bulanan?' + params;
         exportQuery = `tipe=bulanan&bulan=${bulan}` + (unit ? `&unit_id=${unit}` : '');
     }
-
-    document.getElementById('btn-pdf').href   = `/api/rekap/export-pdf?${exportQuery}`;
-    document.getElementById('btn-excel').href = `/api/rekap/export-excel?${exportQuery}`;
+    window._exportQuery = exportQuery;
 
     try {
         const res = await fetch(url, { headers });

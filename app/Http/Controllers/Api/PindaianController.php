@@ -268,47 +268,32 @@ class PindaianController extends Controller
      */
     public function getHariIniPos(Request $request)
     {
-        $sinceId = (int)$request->query('since_id', 0);
-
-        $query = Pindaian::with(['pegawai.unitKerja', 'pasangan'])
-            ->whereDate('jam', today());
-
-        if ($sinceId > 0) {
-            $query->where('id', '>', $sinceId);
-        }
-
-        $scans = $query->orderBy('jam', 'desc')
+        $pasangans = PasanganKeluarMasuk::with(['pegawai.unitKerja', 'pindaianKeluar'])
+            ->whereDate('jam_keluar', today())
+            ->orderBy('jam_keluar', 'desc')
             ->take(50)
             ->get()
             ->map(function ($p) {
+                $durasi = $p->status === 'terbuka'
+                    ? max(0, (int)$p->jam_keluar->diffInMinutes(now()))
+                    : (int)$p->durasi_menit;
                 return [
-                    'pindaian_id'            => $p->id,
-                    'jenis'                  => $p->jenis,
-                    'jam'                    => $p->jam->toDateTimeString(),
-                    'tempat'                 => $p->tempat,
-                    'keperluan_jenis'        => $p->keperluan_jenis,
-                    'nama_lengkap'           => $p->pegawai?->nama_lengkap,
-                    'nip'                    => $p->pegawai?->nip,
-                    'jabatan'                => $p->pegawai?->jabatan,
-                    'foto'                   => $p->pegawai?->foto,
-                    'nama_unit'              => $p->pegawai?->unitKerja?->nama_unit,
-                    'kode_unit'              => $p->pegawai?->unitKerja?->kode_unit,
-                    'pasangan_id'            => $p->pasangan_id,
-                    'jam_keluar'             => $p->pasangan?->jam_keluar?->toDateTimeString(),
-                    'jam_kembali'            => $p->pasangan?->jam_kembali?->toDateTimeString(),
-                    'durasi_menit'           => $p->pasangan?->durasi_menit,
-                    'status_pasangan'        => $p->pasangan?->status,
-                    'durasi_berjalan_menit'  => $p->pasangan && $p->pasangan->status === 'terbuka'
-                        ? max(0, (int)now()->diffInMinutes($p->pasangan->jam_keluar))
-                        : null,
+                    'pasangan_id'     => $p->id,
+                    'nama_lengkap'    => $p->pegawai?->nama_lengkap,
+                    'nama_unit'       => $p->pegawai?->unitKerja?->nama_unit,
+                    'jam_keluar'      => $p->jam_keluar?->format('H:i'),
+                    'jam_kembali'     => $p->jam_kembali?->format('H:i'),
+                    'durasi_menit'    => $durasi,
+                    'keperluan_jenis' => $p->pindaianKeluar?->keperluan_jenis,
+                    'status'          => $p->status,
                 ];
             });
 
         return response()->json([
             'success'     => true,
-            'count'       => $scans->count(),
+            'count'       => $pasangans->count(),
             'server_time' => now()->toDateTimeString(),
-            'data'        => $scans,
+            'data'        => $pasangans,
         ]);
     }
 

@@ -292,9 +292,10 @@
                             <tr>
                                 <th>Nama</th>
                                 <th>Unit</th>
-                                <th>Jam</th>
-                                <th>Jenis</th>
+                                <th>Jam Keluar</th>
+                                <th>Jam Kembali</th>
                                 <th>Keperluan</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="pindaian-tbody">
@@ -377,33 +378,36 @@
             const json = await res.json();
             const list = json.data ?? [];
 
-            document.getElementById('total-pindaian').textContent = `${list.length} pindaian`;
+            document.getElementById('total-pindaian').textContent = `${list.length} catatan`;
 
             const isNew = list.length > lastPindaianCount;
             lastPindaianCount = list.length;
 
             const tbody = document.getElementById('pindaian-tbody');
             if (!list.length) {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Belum ada pindaian hari ini</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">Belum ada pindaian hari ini</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = list.map((p, i) => {
-                const isKeluar = p.jenis === 'keluar';
-                const badgeBg    = isKeluar ? '#fff7ed' : '#f0fdf4';
-                const badgeColor = isKeluar ? '#ea580c' : '#16a34a';
-                const badgeBorder= isKeluar ? '#fed7aa' : '#bbf7d0';
+                const statusMap = {
+                    terbuka:       { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa', label:'Di Luar' },
+                    kembali:       { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', label:'Kembali' },
+                    belum_kembali: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', label:'Belum Kembali' },
+                };
+                const s = statusMap[p.status] ?? { bg:'#f8fbff', color:'#64748b', border:'#dbeeff', label: p.status };
                 return `
                 <tr class="${i === 0 && isNew ? 'highlight-new' : ''}">
                     <td style="font-weight:600;color:#0a2e5c;">${p.nama_lengkap ?? '-'}</td>
                     <td style="color:#64748b;font-size:11px;">${p.nama_unit ?? '-'}</td>
-                    <td style="color:#0073e6;font-weight:600;font-variant-numeric:tabular-nums;">${p.jam ? p.jam.substring(11,19) : '-'}</td>
+                    <td style="color:#0073e6;font-weight:600;font-variant-numeric:tabular-nums;">${p.jam_keluar ?? '-'}</td>
+                    <td style="color:#16a34a;font-weight:600;font-variant-numeric:tabular-nums;">${p.jam_kembali ?? '<span style="color:#94a3b8;">—</span>'}</td>
+                    <td style="color:#64748b;font-size:11px;text-transform:capitalize;">${p.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
                     <td>
-                        <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${badgeBg};color:${badgeColor};border:1px solid ${badgeBorder};">
-                            ${isKeluar ? 'Keluar' : 'Masuk'}
+                        <span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};">
+                            ${s.label}
                         </span>
                     </td>
-                    <td style="color:#64748b;font-size:11px;text-transform:capitalize;">${p.keperluan_jenis?.replace('_',' ') ?? '-'}</td>
                 </tr>`;
             }).join('');
         } catch (_) {}

@@ -95,15 +95,20 @@
             </div>
 
             <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
-                <button class="choice-btn dinas" onclick="submitKeluar('dinas')">
-                    <span style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#dbeeff,#bfdfff);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">📋</span>
+                <button id="btn-dinas" class="choice-btn dinas" onclick="submitKeluar('dinas')" disabled style="opacity:0.4;cursor:not-allowed;">
+                    <span style="width:32px;height:32px;border-radius:8px;background:#dbeeff;border:1px solid rgba(92,194,242,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0073e6" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </span>
                     <div style="text-align:left;">
                         <p style="font-size:13px;font-weight:700;color:#0a2e5c;">Dinas / Tugas Luar</p>
                         <p style="font-size:11px;color:#64748b;font-weight:400;">Perjalanan dinas resmi dengan izin</p>
                     </div>
                 </button>
+                <p id="info-izin" style="font-size:11px;margin:-4px 0 4px 4px;"></p>
                 <button class="choice-btn" onclick="submitKeluar('keperluan_lain')">
-                    <span style="width:32px;height:32px;border-radius:8px;background:#f0f7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">🚶</span>
+                    <span style="width:32px;height:32px;border-radius:8px;background:#f0f7ff;border:1px solid #dbeeff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </span>
                     <div style="text-align:left;">
                         <p style="font-size:13px;font-weight:700;color:#0a2e5c;">Keperluan Lain</p>
                         <p style="font-size:11px;color:#64748b;font-weight:400;">Keperluan pribadi di luar kantor</p>
@@ -175,13 +180,38 @@ function startScan() {
     }, 300);
 }
 
+async function loadIzinDinas() {
+    try {
+        const res = await fetch('/api/izin-dinas/aktif-hari-ini', { headers });
+        const json = await res.json();
+        const list = json.data ?? [];
+        const izin = list.length > 0 ? list[0] : null;
+        const btnDinas = document.getElementById('btn-dinas');
+        const infoIzin = document.getElementById('info-izin');
+        if (izin) {
+            btnDinas.disabled = false;
+            btnDinas.style.opacity = '1';
+            btnDinas.style.cursor = 'pointer';
+            infoIzin.textContent = `✓ Izin disetujui: ${izin.tujuan}`;
+            infoIzin.style.color = '#16a34a';
+        } else {
+            btnDinas.disabled = true;
+            btnDinas.style.opacity = '0.4';
+            btnDinas.style.cursor = 'not-allowed';
+            infoIzin.textContent = 'Tidak ada izin dinas yang disetujui hari ini';
+            infoIzin.style.color = '#94a3b8';
+        }
+    } catch (_) {}
+}
+
 async function validateQR(token) {
     try {
         const res = await fetch('/api/qr/validate', { method:'POST', headers, body: JSON.stringify({ token }) });
         const json = await res.json();
         if (!res.ok) { showToast(json.message ?? 'QR tidak valid', 'danger'); setTimeout(resetScan, 2500); return; }
-        scannedToken = token; scannedJenis = json.data?.jenis;
+        scannedToken = token; scannedJenis = json.jenis;
         if (scannedJenis === 'keluar') {
+            await loadIzinDinas();
             document.getElementById('keperluan-form').style.display = 'block';
             statusText.textContent = 'Pilih keperluan keluar';
         } else {
@@ -195,7 +225,11 @@ async function submitKeluar(keperluan) {
     try {
         const res = await fetch('/api/pindaian/catat-keluar', { method:'POST', headers, body: JSON.stringify({ token: scannedToken, keperluan_jenis: keperluan }) });
         const json = await res.json();
-        if (res.ok) { showToast('Berhasil dicatat keluar!', 'success'); setTimeout(() => window.location.href = '/pegawai/dashboard', 1800); }
+        if (res.ok) {
+            await forceRefreshQR('keluar');
+            showToast('Berhasil dicatat keluar!', 'success');
+            setTimeout(() => window.location.href = '/pegawai/dashboard', 1800);
+        }
         else { showToast(json.message ?? 'Gagal mencatat keluar', 'danger'); setTimeout(resetScan, 2500); }
     } catch (_) { showToast('Gagal terhubung ke server', 'danger'); setTimeout(resetScan, 2500); }
 }
@@ -204,9 +238,19 @@ async function submitMasuk() {
     try {
         const res = await fetch('/api/pindaian/catat-masuk', { method:'POST', headers, body: JSON.stringify({ token: scannedToken }) });
         const json = await res.json();
-        if (res.ok) { showToast('Berhasil dicatat kembali!', 'success'); setTimeout(() => window.location.href = '/pegawai/dashboard', 1800); }
+        if (res.ok) {
+            await forceRefreshQR('masuk');
+            showToast('Berhasil dicatat kembali!', 'success');
+            setTimeout(() => window.location.href = '/pegawai/dashboard', 1800);
+        }
         else { showToast(json.message ?? 'Gagal mencatat masuk', 'danger'); setTimeout(resetScan, 2500); }
     } catch (_) { showToast('Gagal terhubung ke server', 'danger'); setTimeout(resetScan, 2500); }
+}
+
+async function forceRefreshQR(jenis) {
+    try {
+        await fetch('/api/qr/refresh', { method:'POST', headers, body: JSON.stringify({ jenis }) });
+    } catch (_) {}
 }
 
 function resetScan() {

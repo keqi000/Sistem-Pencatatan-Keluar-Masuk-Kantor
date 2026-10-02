@@ -133,9 +133,20 @@
     @endif
 
     <div class="footer-sign">
-        <p>Gorontalo, {{ date('d F Y') }}<br>Mengetahui,<br>Kepala Subbagian Umum</p>
+        @php
+            $pimpinanUser = \App\Models\User::where('role', 'pimpinan')
+                ->where('status', 'aktif')
+                ->with('pegawai')
+                ->first();
+        @endphp
+        <p>Gorontalo, {{ date('d F Y') }}<br>Mengetahui,<br>Pimpinan</p>
         <div class="space"></div>
-        <p><strong>Drs. Ramdan Wartabone, M.Si.</strong><br>NIP. 198003152005011002</p>
+        <p>
+            <strong>{{ $pimpinanUser?->full_name ?? 'Pimpinan' }}</strong>
+            @if($pimpinanUser?->pegawai?->nip)
+                <br>NIP. {{ $pimpinanUser->pegawai->nip }}
+            @endif
+        </p>
     </div>
 </body>
 </html>

@@ -84,16 +84,16 @@
             </button>
 
             <div style="display:flex;gap:8px;margin-left:auto;">
-                <a id="btn-pdf" href="#" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;"
+                <button onclick="exportDoc('pdf')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
                     <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     PDF
-                </a>
-                <a id="btn-excel" href="#" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;"
+                </button>
+                <button onclick="exportDoc('excel')" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
                     <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Excel
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -198,12 +198,12 @@ async function loadRekap() {
         const tgl = document.getElementById('input-tanggal').value;
         params.append('tanggal', tgl);
         url = '/api/rekap/harian?' + params;
-        updateExportLinks(`tipe=harian&tanggal=${tgl}`);
+        window._exportQuery = `tipe=harian&tanggal=${tgl}` + (unitKerjaId ? `&unit_id=${unitKerjaId}` : '');
     } else {
         const bln = document.getElementById('input-bulan').value;
         params.append('bulan', bln);
         url = '/api/rekap/bulanan?' + params;
-        updateExportLinks(`tipe=bulanan&bulan=${bln}`);
+        window._exportQuery = `tipe=bulanan&bulan=${bln}` + (unitKerjaId ? `&unit_id=${unitKerjaId}` : '');
     }
 
     try {
@@ -260,10 +260,14 @@ async function loadRekap() {
     }
 }
 
-function updateExportLinks(query) {
-    const unitParam = unitKerjaId ? `&unit_id=${unitKerjaId}` : '';
-    document.getElementById('btn-pdf').href   = `/api/rekap/export-pdf?${query}${unitParam}`;
-    document.getElementById('btn-excel').href = `/api/rekap/export-excel?${query}${unitParam}`;
+function exportDoc(tipe) {
+    if (!window._exportQuery) {
+        alert('Pilih tanggal/bulan dan klik Tampilkan terlebih dahulu sebelum mengunduh.');
+        return;
+    }
+    window.open(tipe === 'pdf'
+        ? `/api/rekap/export-pdf?${window._exportQuery}`
+        : `/api/rekap/export-excel?${window._exportQuery}`, '_blank');
 }
 
 loadNamaUnit();

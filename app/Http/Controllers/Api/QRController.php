@@ -72,6 +72,33 @@ class QRController extends Controller
     }
 
     /**
+     * Force refresh QR — hapus token aktif dan generate baru
+     */
+    public function forceRefresh(Request $request)
+    {
+        $request->validate(['jenis' => 'required|in:keluar,masuk']);
+
+        $interval = (int)Pengaturan::get('qr_interval', 10);
+        $interval = max(5, min(300, $interval));
+
+        QrSesaat::where('jenis', $request->jenis)->delete();
+
+        $newQr = QrSesaat::create([
+            'token'      => (string)Str::uuid(),
+            'jenis'      => $request->jenis,
+            'expired_at' => now()->addSeconds($interval),
+        ]);
+
+        return response()->json([
+            'success'    => true,
+            'token'      => $newQr->token,
+            'jenis'      => $newQr->jenis,
+            'expired_at' => $newQr->expired_at->toDateTimeString(),
+            'interval'   => $interval,
+        ]);
+    }
+
+    /**
      * Validasi kode QR
      */
     public function validateToken(Request $request)

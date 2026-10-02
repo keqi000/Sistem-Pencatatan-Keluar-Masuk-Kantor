@@ -187,25 +187,20 @@ let allData = [], activeTab = 'menunggu', modalIzinId = null, modalAksi = null;
 
 async function loadIzin() {
     try {
-        const res = await fetch('/api/izin-dinas/bawahan');
+        const res = await fetch('/api/izin-dinas/bawahan', { headers });
         const json = await res.json();
-        console.log('Response status:', res.status);
-        console.log('Response body:', json);
         if (!res.ok) {
-            console.error('401 detail:', json);
             document.getElementById('izin-list').innerHTML =
-                `<div style="grid-column:1/-1;padding:40px;text-align:center;color:#dc2626;font-size:13px;">Error ${res.status}: ${json.message ?? 'Unauthorized'}</div>`;
+                `<div style="grid-column:1/-1;padding:40px;text-align:center;color:#dc2626;font-size:13px;">Gagal memuat: ${json.message ?? 'Unauthorized'}</div>`;
             return;
         }
         allData = json.data ?? [];
-
         ['menunggu','disetujui','ditolak'].forEach(s => {
             const c = allData.filter(d => d.status === s).length;
             const b = document.getElementById('badge-' + s);
             b.textContent = c;
             b.style.display = c > 0 ? 'flex' : 'none';
         });
-
         renderKartu(allData.filter(d => d.status === activeTab));
     } catch (_) {
         document.getElementById('izin-list').innerHTML =
@@ -217,7 +212,7 @@ function renderKartu(data) {
     const list = document.getElementById('izin-list');
     if (!data.length) {
         list.innerHTML = `<div style="grid-column:1/-1;padding:60px;text-align:center;">
-            <p style="font-size:32px;margin-bottom:8px;">📋</p>
+            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#dbeeff" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <p style="font-size:13px;color:#94a3b8;">Tidak ada pengajuan ${activeTab}</p>
         </div>`;
         return;
@@ -270,14 +265,20 @@ function renderKartu(data) {
 
             ${d.catatan_atasan ? `
             <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:#f0f7ff;border-left:3px solid #5cc2f2;">
-                <span style="font-size:14px;">💬</span>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#5cc2f2" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                 <p style="font-size:11px;color:#0a2e5c;line-height:1.5;"><span style="font-weight:700;">Catatan:</span> ${d.catatan_atasan}</p>
             </div>` : ''}
 
             ${d.status === 'menunggu' ? `
             <div style="display:flex;gap:8px;">
-                <button class="btn-setujui" onclick="openModal(${d.id}, 'setujui')">✓ Setujui</button>
-                <button class="btn-tolak"   onclick="openModal(${d.id}, 'tolak')">✗ Tolak</button>
+                <button class="btn-setujui" onclick="openModal(${d.id}, 'setujui')">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Setujui
+                </button>
+                <button class="btn-tolak" onclick="openModal(${d.id}, 'tolak')">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Tolak
+                </button>
             </div>` : ''}
         </div>`;
     }).join('');
@@ -295,9 +296,11 @@ function filterTab(tab) {
 function openModal(id, aksi) {
     modalIzinId = id; modalAksi = aksi;
     const isSetujui = aksi === 'setujui';
-    document.getElementById('modal-icon').textContent = isSetujui ? '✓' : '✗';
-    document.getElementById('modal-icon').style.background = isSetujui ? '#f0fdf4' : '#fef2f2';
-    document.getElementById('modal-icon').style.color = isSetujui ? '#16a34a' : '#dc2626';
+    const iconEl = document.getElementById('modal-icon');
+    iconEl.style.background = isSetujui ? '#f0fdf4' : '#fef2f2';
+    iconEl.innerHTML = isSetujui
+        ? '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+        : '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
     document.getElementById('modal-title').textContent = isSetujui ? 'Setujui Izin Dinas' : 'Tolak Izin Dinas';
     document.getElementById('modal-sub').textContent = isSetujui ? 'Tambahkan catatan opsional.' : 'Alasan penolakan wajib diisi.';
     document.getElementById('modal-label').textContent = isSetujui ? 'Catatan (opsional)' : 'Alasan Penolakan *';
@@ -343,5 +346,6 @@ function showToast(msg, type) {
 }
 
 loadIzin();
+setInterval(loadIzin, 10000);
 </script>
 @endpush

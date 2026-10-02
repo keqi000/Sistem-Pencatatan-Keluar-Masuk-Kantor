@@ -24,6 +24,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 // 2. Layar Publik / Hardware Polling (Layar Lobby & Layar Pos Security)
 Route::get('/qr/current', [QRController::class, 'getCurrent']);
 Route::post('/qr/validate', [QRController::class, 'validateToken']);
+Route::post('/qr/refresh', [QRController::class, 'forceRefresh']);
 Route::get('/pindaian/pos-hari-ini', [PindaianController::class, 'getHariIniPos']);
 
 // 3. Rute Terproteksi (Sanctum Token / Session)

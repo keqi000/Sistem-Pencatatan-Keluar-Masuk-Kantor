@@ -190,5 +190,6 @@ function showToast(msg, type) {
 }
 
 loadIzin();
+setInterval(loadIzin, 10000);
 </script>
 @endpush
